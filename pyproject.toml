@@ -1,0 +1,23 @@
+[project]
+name = "wps-mcp"
+version = "0.1.0"
+description = "MCP server for WPS Office Excel automation"
+authors = [{name = "WPS MCP Developer"}]
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0.0",
+    "pywin32>=306",
+]
+
+[project.optional-dependencies]
+build-exe = ["pyinstaller>=6.0"]
+
+[project.scripts]
+wps-mcp = "wps_mcp.server:main"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
