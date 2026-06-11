@@ -686,6 +686,598 @@ TOOLS = [
             "required": [],
         },
     ),
+    # ── Font & Text Formatting ──
+    Tool(
+        name="wps_set_font_name",
+        description="Set the font name/typeface for a cell or range (e.g., 'Arial', 'Calibri', 'Times New Roman').",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                },
+                "font_name": {
+                    "type": "string",
+                    "description": "Font name (e.g., 'Arial', 'Calibri', 'Times New Roman', 'Microsoft YaHei').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_or_range", "font_name"],
+        },
+    ),
+    Tool(
+        name="wps_set_font_italic",
+        description="Set or remove italic formatting for a cell or range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                },
+                "italic": {
+                    "type": "boolean",
+                    "description": "True to make italic, False to remove italic.",
+                    "default": True,
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_or_range"],
+        },
+    ),
+    Tool(
+        name="wps_set_font_color",
+        description="Set the font (text) color for a cell or range using an RGB hex string.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                },
+                "color": {
+                    "type": "string",
+                    "description": "Font color as RGB hex string (e.g., 'FF0000' for red, '0000FF' for blue, '000000' for black).",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_or_range", "color"],
+        },
+    ),
+    Tool(
+        name="wps_set_wrap_text",
+        description="Enable or disable text wrapping for a cell or range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                },
+                "wrap": {
+                    "type": "boolean",
+                    "description": "True to wrap text, False to unwrap.",
+                    "default": True,
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_or_range"],
+        },
+    ),
+    Tool(
+        name="wps_set_borders",
+        description="Set borders for a cell or range. Supports all border edges and outline-only mode.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                },
+                "border_style": {
+                    "type": "string",
+                    "description": "Border line style: 'thin' (default), 'medium', 'thick', 'dotted', 'dashed', 'double', 'hairline', 'none'.",
+                    "enum": ["thin", "medium", "thick", "dotted", "dashed", "double", "hairline", "none"],
+                    "default": "thin",
+                },
+                "border_color": {
+                    "type": "string",
+                    "description": "Optional border color as RGB hex (e.g., '000000' for black, 'FF0000' for red).",
+                },
+                "outline_only": {
+                    "type": "boolean",
+                    "description": "If True, set only outer borders. If False (default), set all borders including inner grid.",
+                    "default": False,
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_or_range"],
+        },
+    ),
+    # ── AutoFit / Freeze / Filter ──
+    Tool(
+        name="wps_autofit_columns",
+        description="Auto-fit column widths to their content. Can apply to all used columns or a specific range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+                "start_col": {
+                    "type": "integer",
+                    "description": "Optional first column number (1=A). If omitted, fits all used columns.",
+                },
+                "end_col": {
+                    "type": "integer",
+                    "description": "Optional last column number. If omitted, fits only start_col or all columns.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="wps_autofit_rows",
+        description="Auto-fit row heights to their content. Can apply to all used rows or a specific range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+                "start_row": {
+                    "type": "integer",
+                    "description": "Optional first row number. If omitted, fits all used rows.",
+                },
+                "end_row": {
+                    "type": "integer",
+                    "description": "Optional last row number. If omitted, fits only start_row or all rows.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="wps_freeze_panes",
+        description="Freeze panes at a specific cell. Rows above and columns to the left of the cell are frozen.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_ref": {
+                    "type": "string",
+                    "description": "Cell at which to freeze. Default 'B2' freezes first row + first column. 'A2' freezes first row only. 'B1' freezes first column only.",
+                    "default": "B2",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="wps_unfreeze_panes",
+        description="Remove all frozen panes from a sheet.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="wps_auto_filter",
+        description="Add or toggle AutoFilter dropdowns for a range. If no range is specified, applies to the used range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "range_ref": {
+                    "type": "string",
+                    "description": "Optional range to apply filter (e.g., 'A1:D100'). If omitted, uses the entire used range.",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    # ── Sort / Copy-Paste ──
+    Tool(
+        name="wps_sort_range",
+        description="Sort a range of cells by a specified column.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "range_ref": {
+                    "type": "string",
+                    "description": "Range to sort (e.g., 'A2:D100'). Include header row if present.",
+                },
+                "sort_key": {
+                    "type": "string",
+                    "description": "Cell within the range to sort by (e.g., 'A2' to sort by column A). If omitted, sorts by first column.",
+                },
+                "sort_order": {
+                    "type": "string",
+                    "description": "Sort order: 'ascending' (default) or 'descending'.",
+                    "enum": ["ascending", "descending"],
+                    "default": "ascending",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["range_ref"],
+        },
+    ),
+    Tool(
+        name="wps_copy_range",
+        description="Copy a range to the clipboard.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "range_ref": {
+                    "type": "string",
+                    "description": "Range to copy (e.g., 'A1:D10').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["range_ref"],
+        },
+    ),
+    Tool(
+        name="wps_paste_range",
+        description="Paste clipboard contents to a destination cell. Supports paste special options.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "dest_cell": {
+                    "type": "string",
+                    "description": "Top-left cell to paste to (e.g., 'A1').",
+                },
+                "paste_special": {
+                    "type": "string",
+                    "description": "Optional paste mode: 'values', 'formats', 'formulas', 'all' (default), 'transpose'.",
+                    "enum": ["values", "formats", "formulas", "all", "transpose"],
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["dest_cell"],
+        },
+    ),
+    # ── Find / Comment / Clear ──
+    Tool(
+        name="wps_find_next",
+        description="Find the next occurrence after a previous wps_find_cell call.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="wps_add_comment",
+        description="Add a comment/note to a cell.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_ref": {
+                    "type": "string",
+                    "description": "Cell reference (e.g., 'A1').",
+                },
+                "text": {
+                    "type": "string",
+                    "description": "Comment text.",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_ref", "text"],
+        },
+    ),
+    Tool(
+        name="wps_delete_comment",
+        description="Remove a comment from a cell.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_ref": {
+                    "type": "string",
+                    "description": "Cell reference (e.g., 'A1').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_ref"],
+        },
+    ),
+    Tool(
+        name="wps_clear_formats",
+        description="Clear only formatting from a cell or range (retains content).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_or_range"],
+        },
+    ),
+    Tool(
+        name="wps_clear_all",
+        description="Clear everything (contents, formats, comments) from a cell or range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_or_range"],
+        },
+    ),
+    # ── Conditional Formatting ──
+    Tool(
+        name="wps_add_conditional_format",
+        description="Add a conditional formatting rule to a range (e.g., highlight cells greater than a value).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "range_ref": {
+                    "type": "string",
+                    "description": "Range to apply to (e.g., 'B2:B100').",
+                },
+                "operator": {
+                    "type": "string",
+                    "description": "Comparison operator.",
+                    "enum": ["greaterThan", "lessThan", "equal", "between", "greaterThanOrEqual", "lessThanOrEqual", "notEqual"],
+                    "default": "greaterThan",
+                },
+                "formula": {
+                    "type": "string",
+                    "description": "Threshold value or formula (e.g., '100', '0', '=$B$1').",
+                    "default": "0",
+                },
+                "font_color": {
+                    "type": "string",
+                    "description": "Optional font color as RGB hex (e.g., 'FF0000' for red).",
+                },
+                "bg_color": {
+                    "type": "string",
+                    "description": "Optional background fill color as RGB hex (e.g., 'FFFF00' for yellow).",
+                },
+                "bold": {
+                    "type": "boolean",
+                    "description": "Whether to make the font bold.",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["range_ref"],
+        },
+    ),
+    # ── Data Validation ──
+    Tool(
+        name="wps_add_data_validation",
+        description="Add data validation (dropdown list or input restriction) to a cell or range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "range_ref": {
+                    "type": "string",
+                    "description": "Range to apply validation to (e.g., 'C2:C100').",
+                },
+                "validation_type": {
+                    "type": "string",
+                    "description": "Validation type: 'list' for dropdown, or 'whole', 'decimal', 'date', 'time', 'textLength', 'custom'.",
+                    "enum": ["list", "whole", "decimal", "date", "time", "textLength", "custom"],
+                    "default": "list",
+                },
+                "formula1": {
+                    "type": "string",
+                    "description": "Validation formula. For list: 'Option1,Option2,Option3' or '=$A$1:$A$10' for range-based list. For other types: the min/allowed value.",
+                    "default": "",
+                },
+                "formula2": {
+                    "type": "string",
+                    "description": "Second formula for 'between' / 'notBetween' operators (max value).",
+                    "default": "",
+                },
+                "ignore_blank": {
+                    "type": "boolean",
+                    "description": "Allow blank cells. Default: true.",
+                    "default": True,
+                },
+                "show_dropdown": {
+                    "type": "boolean",
+                    "description": "Show dropdown arrow for list validation. Default: true.",
+                    "default": True,
+                },
+                "error_title": {
+                    "type": "string",
+                    "description": "Title for the error dialog when invalid data is entered.",
+                },
+                "error_message": {
+                    "type": "string",
+                    "description": "Error message to show when invalid data is entered.",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["range_ref"],
+        },
+    ),
+    # ── Sheet Protection ──
+    Tool(
+        name="wps_protect_sheet",
+        description="Protect a worksheet with optional password and permission flags.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "description": "Optional password to protect the sheet.",
+                    "default": "",
+                },
+                "allow_sort": {
+                    "type": "boolean",
+                    "description": "Allow sorting of locked cells. Default: false.",
+                    "default": False,
+                },
+                "allow_filter": {
+                    "type": "boolean",
+                    "description": "Allow using AutoFilter. Default: false.",
+                    "default": False,
+                },
+                "allow_format_cells": {
+                    "type": "boolean",
+                    "description": "Allow formatting cells. Default: false.",
+                    "default": False,
+                },
+                "allow_insert_rows": {
+                    "type": "boolean",
+                    "description": "Allow inserting rows. Default: false.",
+                    "default": False,
+                },
+                "allow_delete_rows": {
+                    "type": "boolean",
+                    "description": "Allow deleting rows. Default: false.",
+                    "default": False,
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="wps_unprotect_sheet",
+        description="Remove protection from a worksheet.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "description": "Password if the sheet was protected with one.",
+                    "default": "",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    # ── Page Setup ──
+    Tool(
+        name="wps_set_print_area",
+        description="Set the print area for a sheet.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "range_ref": {
+                    "type": "string",
+                    "description": "Range to set as print area (e.g., 'A1:F50').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["range_ref"],
+        },
+    ),
+    Tool(
+        name="wps_clear_print_area",
+        description="Clear the print area for a sheet.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="wps_set_page_orientation",
+        description="Set the page orientation for printing: portrait or landscape.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "orientation": {
+                    "type": "string",
+                    "description": "Page orientation: 'portrait' or 'landscape'.",
+                    "enum": ["portrait", "landscape"],
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["orientation"],
+        },
+    ),
 ]
 
 
@@ -924,6 +1516,189 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSExcelClient) -> st
     elif name == "wps_run_macro":
         ret = client.run_macro(args["macro_name"])
         result = {"message": f"Ran macro '{args['macro_name']}'", "return_value": str(ret)}
+
+    # ── Font & Text Formatting ──
+    elif name == "wps_set_font_name":
+        client.set_font_name(args["cell_or_range"], args["font_name"], args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} font name = '{args['font_name']}'"}
+
+    elif name == "wps_set_font_italic":
+        italic = args.get("italic", True)
+        client.set_font_italic(args["cell_or_range"], italic, args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} font italic = {italic}"}
+
+    elif name == "wps_set_font_color":
+        color_hex = args["color"].lstrip("#")
+        color_int = int(color_hex, 16)
+        client.set_font_color(args["cell_or_range"], color_int, args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} font color = #{color_hex}"}
+
+    elif name == "wps_set_wrap_text":
+        wrap = args.get("wrap", True)
+        client.set_wrap_text(args["cell_or_range"], wrap, args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} wrap text = {wrap}"}
+
+    elif name == "wps_set_borders":
+        border_style = args.get("border_style", "thin")
+        border_color = None
+        if args.get("border_color"):
+            border_color = int(args["border_color"].lstrip("#"), 16)
+        outline_only = args.get("outline_only", False)
+        client.set_borders(
+            args["cell_or_range"],
+            border_style,
+            border_color,
+            outline_only,
+            args.get("sheet_name"),
+        )
+        result = {"message": f"Set borders on {args['cell_or_range']} (style={border_style})"}
+
+    # ── AutoFit / Freeze / Filter ──
+    elif name == "wps_autofit_columns":
+        client.autofit_columns(
+            args.get("sheet_name"),
+            args.get("start_col"),
+            args.get("end_col"),
+        )
+        result = {"message": "Auto-fitted column widths."}
+
+    elif name == "wps_autofit_rows":
+        client.autofit_rows(
+            args.get("sheet_name"),
+            args.get("start_row"),
+            args.get("end_row"),
+        )
+        result = {"message": "Auto-fitted row heights."}
+
+    elif name == "wps_freeze_panes":
+        cell_ref = args.get("cell_ref", "B2")
+        client.freeze_panes(cell_ref, args.get("sheet_name"))
+        result = {"message": f"Froze panes at {cell_ref}"}
+
+    elif name == "wps_unfreeze_panes":
+        client.unfreeze_panes(args.get("sheet_name"))
+        result = {"message": "Unfroze all panes."}
+
+    elif name == "wps_auto_filter":
+        client.auto_filter(args.get("range_ref"), args.get("sheet_name"))
+        rng = args.get("range_ref", "used range")
+        result = {"message": f"Applied AutoFilter to {rng}"}
+
+    # ── Sort / Copy-Paste ──
+    elif name == "wps_sort_range":
+        client.sort_range(
+            args["range_ref"],
+            args.get("sort_key"),
+            args.get("sort_order", "ascending"),
+            args.get("sheet_name"),
+        )
+        order = args.get("sort_order", "ascending")
+        result = {"message": f"Sorted {args['range_ref']} ({order})."}
+
+    elif name == "wps_copy_range":
+        client.copy_range(args["range_ref"], args.get("sheet_name"))
+        result = {"message": f"Copied {args['range_ref']} to clipboard."}
+
+    elif name == "wps_paste_range":
+        client.paste_range(
+            args["dest_cell"],
+            args.get("sheet_name"),
+            args.get("paste_special"),
+        )
+        mode = args.get("paste_special", "all")
+        result = {"message": f"Pasted to {args['dest_cell']} (mode={mode})."}
+
+    # ── Find / Comment / Clear ──
+    elif name == "wps_find_next":
+        found = client.find_next_cell(args.get("sheet_name"))
+        if found is None:
+            result = {"found": False, "message": "No more matches."}
+        else:
+            result = {"found": True, **found}
+
+    elif name == "wps_add_comment":
+        client.add_comment(args["cell_ref"], args["text"], args.get("sheet_name"))
+        result = {"message": f"Added comment to {args['cell_ref']}"}
+
+    elif name == "wps_delete_comment":
+        client.delete_comment(args["cell_ref"], args.get("sheet_name"))
+        result = {"message": f"Deleted comment from {args['cell_ref']}"}
+
+    elif name == "wps_clear_formats":
+        client.clear_formats(args["cell_or_range"], args.get("sheet_name"))
+        result = {"message": f"Cleared formats from {args['cell_or_range']}"}
+
+    elif name == "wps_clear_all":
+        client.clear_all(args["cell_or_range"], args.get("sheet_name"))
+        result = {"message": f"Cleared all (contents + formats) from {args['cell_or_range']}"}
+
+    # ── Conditional Formatting ──
+    elif name == "wps_add_conditional_format":
+        font_color = None
+        bg_color = None
+        if args.get("font_color"):
+            font_color = int(args["font_color"].lstrip("#"), 16)
+        if args.get("bg_color"):
+            bg_color = int(args["bg_color"].lstrip("#"), 16)
+        client.add_conditional_format(
+            args["range_ref"],
+            rule_type="cellValue",
+            operator=args.get("operator", "greaterThan"),
+            formula=args.get("formula", "0"),
+            font_color=font_color,
+            bg_color=bg_color,
+            bold=args.get("bold"),
+            sheet_name=args.get("sheet_name"),
+        )
+        result = {"message": f"Added conditional formatting to {args['range_ref']}"}
+
+    # ── Data Validation ──
+    elif name == "wps_add_data_validation":
+        client.add_data_validation(
+            args["range_ref"],
+            validation_type=args.get("validation_type", "list"),
+            formula1=args.get("formula1", ""),
+            formula2=args.get("formula2", ""),
+            ignore_blank=args.get("ignore_blank", True),
+            show_dropdown=args.get("show_dropdown", True),
+            error_title=args.get("error_title", ""),
+            error_message=args.get("error_message", ""),
+            sheet_name=args.get("sheet_name"),
+        )
+        result = {"message": f"Added data validation to {args['range_ref']} (type={args.get('validation_type', 'list')})"}
+
+    # ── Sheet Protection ──
+    elif name == "wps_protect_sheet":
+        client.protect_sheet(
+            password=args.get("password", ""),
+            allow_sort=args.get("allow_sort", False),
+            allow_filter=args.get("allow_filter", False),
+            allow_format_cells=args.get("allow_format_cells", False),
+            allow_insert_rows=args.get("allow_insert_rows", False),
+            allow_delete_rows=args.get("allow_delete_rows", False),
+            sheet_name=args.get("sheet_name"),
+        )
+        result = {"message": "Sheet protected."}
+
+    elif name == "wps_unprotect_sheet":
+        client.unprotect_sheet(
+            password=args.get("password", ""),
+            sheet_name=args.get("sheet_name"),
+        )
+        result = {"message": "Sheet unprotected."}
+
+    # ── Page Setup ──
+    elif name == "wps_set_print_area":
+        client.set_print_area(args["range_ref"], args.get("sheet_name"))
+        result = {"message": f"Set print area to {args['range_ref']}"}
+
+    elif name == "wps_clear_print_area":
+        client.clear_print_area(args.get("sheet_name"))
+        result = {"message": "Cleared print area."}
+
+    elif name == "wps_set_page_orientation":
+        client.set_page_orientation(args["orientation"], args.get("sheet_name"))
+        result = {"message": f"Set page orientation to {args['orientation']}"}
 
     else:
         raise ValueError(f"Unknown tool: {name}")
