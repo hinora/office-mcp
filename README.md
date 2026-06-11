@@ -1,29 +1,25 @@
-# WPS MCP Server
+# MCP Servers for Windows Office Automation
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for automating **WPS Office Excel** on Windows. This server enables AI assistants (like GitHub Copilot, Claude, etc.) to programmatically create, read, update, and format Excel workbooks in WPS Office via COM automation.
+This project provides [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers for automating Microsoft Windows desktop applications on your local machine. These servers enable AI assistants (like GitHub Copilot, Claude, etc.) to interact with your local Office applications via COM automation.
 
-## Features
+## Included MCP Servers
 
-| Category | Operations |
+| Server | Description |
 |---|---|
-| **Workbook** | Create, open, save, close, list |
-| **Worksheet** | Add, rename, delete, activate, list |
-| **Cells** | Get/set single cell, get/set range, clear |
-| **Formatting** | Bold, font size, fill color, alignment, number format, merge/unmerge |
-| **Rows/Columns** | Insert, delete, resize (height/width) |
-| **Charts** | Add column, line, pie, bar, area, scatter charts |
-| **Search** | Find cells by text content |
-| **Macros** | Run VBA macros |
-| **Window** | Show/hide WPS Excel window |
+| **wps-excel-mcp** | Automate WPS Office Excel (create, read, format workbooks, charts, etc.) |
+| **outlook-mcp** | Automate Microsoft Outlook (email, calendar, contacts) |
+
+---
 
 ## Prerequisites
 
-- **Windows** (WPS Office COM automation is Windows-only)
+- **Windows** (COM automation is Windows-only)
 - **Python 3.10+**
-- **WPS Office** installed (with Excel / Spreadsheets component)
 - Required Python packages:
   - `mcp` — MCP Python SDK
   - `pywin32` — Windows COM automation
+- **WPS Office** installed (for wps-excel-mcp)
+- **Microsoft Outlook** installed (for outlook-mcp)
 
 ## Installation
 
@@ -38,59 +34,54 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-## Build Standalone EXE (No Python Required)
+## Build Standalone EXEs (No Python Required)
 
-You can build `wps-mcp.exe` — a single standalone executable that users can run **without installing Python or any dependencies**. The only requirement on the target machine is **WPS Office installed**.
+You can build standalone `.exe` files that users can run **without installing Python or any dependencies**. The only requirement on the target machine is the respective Office application installed.
 
 ### One-Click Build
 
 ```batch
-# Double-click or run in terminal:
+# Build all MCP servers:
 build_exe.bat
+
+# Or build individually:
+build_exe.bat --wps
+build_exe.bat --outlook
 ```
 
 Or manually:
 
 ```bash
 pip install pyinstaller
-python build_exe.py
+python build_exe.py            # Build both
+python build_exe.py --wps      # WPS Excel MCP only
+python build_exe.py --outlook  # Outlook MCP only
 ```
 
-The output is at `dist\wps-mcp.exe` (~10-20 MB, self-contained).
+Output:
+- `dist\wps-excel-mcp.exe`
+- `dist\outlook-mcp.exe`
 
-### Using the EXE
+### Using the EXEs
 
-After building, distribute `dist\wps-mcp.exe`. Users add it to their MCP client config:
+Add them to your MCP client config:
 
 ```json
 {
   "mcpServers": {
-    "wps-mcp": {
-      "command": "C:\\path\\to\\wps-mcp.exe"
+    "wps-excel-mcp": {
+      "command": "C:\\path\\to\\wps-excel-mcp.exe"
+    },
+    "outlook-mcp": {
+      "command": "C:\\path\\to\\outlook-mcp.exe"
     }
   }
 }
 ```
 
-No Python, no pip, no `requirements.txt` — just the `.exe` and WPS Office.
+## Configuration (Development Mode)
 
-## Configuration
-
-Add the server to your MCP client configuration (e.g., Claude Desktop, VS Code Copilot, etc.):
-
-### Claude Desktop (`claude_desktop_config.json`)
-
-```json
-{
-  "mcpServers": {
-    "wps-mcp": {
-      "command": "python",
-      "args": ["-m", "wps_mcp.server"],
-      "cwd": "d:/work/wps-mcp/src"
-    }
-  }
-}
-```
+Add the servers to your MCP client configuration:
 
 ### VS Code / GitHub Copilot
 
@@ -99,73 +90,54 @@ Add to your `.vscode/mcp.json`:
 ```json
 {
   "servers": {
-    "wps-mcp": {
+    "wps-excel-mcp": {
       "command": "python",
       "args": ["-m", "wps_mcp.server"],
+      "cwd": "d:/work/wps-mcp/src"
+    },
+    "outlook-mcp": {
+      "command": "python",
+      "args": ["-m", "outlook_mcp.server"],
       "cwd": "d:/work/wps-mcp/src"
     }
   }
 }
 ```
 
-Or use the installed entry point:
+Or use the installed entry points:
 
 ```json
 {
   "servers": {
-    "wps-mcp": {
-      "command": "wps-mcp"
+    "wps-excel-mcp": {
+      "command": "wps-excel-mcp"
+    },
+    "outlook-mcp": {
+      "command": "outlook-mcp"
     }
   }
 }
 ```
 
-## Usage Examples
+---
 
-Once configured, an AI assistant can use the following tools:
+# WPS Excel MCP (`wps-excel-mcp`)
 
-### Create a workbook and populate data
+Automate WPS Office Excel via COM automation.
 
-```
-> Create a new Excel workbook, add headers "Name", "Age", "City" in row 1,
-  then add 3 rows of sample data. Make the header row bold with a blue background.
-```
+## Features
 
-The assistant will call:
-1. `wps_create_workbook` — creates a new workbook
-2. `wps_set_range_values` — sets headers and data
-3. `wps_set_font_bold` — bolds the header row
-4. `wps_set_cell_color` — colors the header background
-
-### Read data from an existing file
-
-```
-> Open the file "C:\Users\me\Documents\sales.xlsx" and tell me the total
-  sales from column C
-```
-
-The assistant will call:
-1. `wps_open_workbook` — opens the file
-2. `wps_get_range_values` — reads the sales column
-3. Computes the total (or asks you to use Excel formulas)
-
-### Create a chart
-
-```
-> Create a bar chart from the data in range A1:B10
-```
-
-The assistant will call:
-- `wps_add_chart` with `chart_type="bar"` and `range_ref="A1:B10"`
-
-### Search for data
-
-```
-> Find all cells containing "Pending" in the sheet
-```
-
-The assistant will call:
-- `wps_find_cell` with `search_text="Pending"`
+| Category | Operations |
+|---|---|
+| **Workbook** | Create, open, save, close, list |
+| **Worksheet** | Add, rename, delete, activate, list |
+| **Cells** | Get/set single cell, get/set range, clear |
+| **Formatting** | Bold, font size, fill color, alignment, number format, merge/unmerge |
+| **Rows/Columns** | Insert, delete, resize (height/width) |
+| **Charts** | Add column, line, pie, bar, area, scatter charts |
+| **Search** | Find cells by text content |
+| **Macros** | Run VBA macros |
+| **Window** | Show/hide WPS Excel window |
 
 ## Tool Reference
 
@@ -241,37 +213,129 @@ wps-mcp/
 ├── pyproject.toml              # Project metadata & dependencies
 ├── requirements.txt            # Pip dependencies
 ├── README.md                   # This file
+├── build_exe.py                # Build standalone .exe files
+├── build_exe.bat               # Build script wrapper
 └── src/
-    └── wps_mcp/
-        ├── __init__.py         # Package init
+    ├── wps_mcp/                # WPS Excel MCP Server
+    │   ├── __init__.py
+    │   ├── server.py           # MCP server with tool definitions & handlers
+    │   ├── wps_client.py       # WPS Excel COM client
+    │   └── tools/
+    │       └── __init__.py
+    └── outlook_mcp/            # Outlook MCP Server
+        ├── __init__.py
         ├── server.py           # MCP server with tool definitions & handlers
-        ├── wps_client.py       # WPS Office COM client (low-level API)
-        └── tools/
-            └── __init__.py     # Tools package (extensible)
+        └── outlook_client.py   # Outlook COM client
 ```
 
 ## How It Works
 
-1. The MCP server runs as a subprocess and communicates via **stdio** (standard input/output) using JSON-RPC.
-2. When an AI assistant calls a tool, the server dispatches it to the appropriate handler in `server.py`.
-3. The handler calls the **WPS Excel COM client** (`wps_client.py`), which uses `win32com` to automate WPS Office via its COM interface (`ET.Application`).
+1. Each MCP server runs as a subprocess and communicates via **stdio** (standard input/output) using JSON-RPC.
+2. When an AI assistant calls a tool, the server dispatches it to the appropriate handler.
+3. The handler calls the COM client which uses `win32com` to automate the target application via its COM interface.
 4. Results are serialized to JSON and returned to the AI assistant.
 
-### COM ProgIDs
+---
 
-The client tries these ProgIDs in order:
-- `ET.Application` — WPS Excel (Spreadsheets)
-- `KET.Application` — Older WPS Excel
+# Outlook MCP (`outlook-mcp`)
 
-If WPS Office is already running, it connects to the existing instance.
+Automate Microsoft Outlook via COM automation.
+
+## Features
+
+| Category | Operations |
+|---|---|
+| **Email** | List, search, get details, send, reply, forward, delete, move, mark read |
+| **Attachments** | Save email attachments to disk |
+| **Calendar** | List events, create appointments, delete |
+| **Contacts** | List, search, create, delete |
+| **Mailbox** | Get mailbox info (accounts, folder counts, version) |
+
+## Tool Reference
+
+### Mailbox Tools
+
+| Tool | Description |
+|---|---|
+| `outlook_get_mailbox_info` | Get Outlook version, accounts, folder counts |
+
+### Email Tools
+
+| Tool | Description |
+|---|---|
+| `outlook_list_emails` | List recent emails from Inbox, Sent, Drafts, or Deleted |
+| `outlook_search_emails` | Search emails by subject, sender, date range, read status |
+| `outlook_get_email` | Get full details of an email by EntryID (including body) |
+| `outlook_send_email` | Send a new email (with optional CC, BCC, attachments, HTML) |
+| `outlook_reply_email` | Reply to an email (or Reply All) |
+| `outlook_forward_email` | Forward an email to new recipients |
+| `outlook_delete_email` | Delete an email by EntryID |
+| `outlook_mark_read` | Mark an email as read or unread |
+| `outlook_move_email` | Move an email to a different folder |
+| `outlook_save_attachment` | Save an attachment from an email to disk |
+
+### Calendar Tools
+
+| Tool | Description |
+|---|---|
+| `outlook_list_calendar` | List calendar events for a date range |
+| `outlook_create_appointment` | Create a new appointment (with optional meeting invitations) |
+| `outlook_delete_appointment` | Delete an appointment by EntryID |
+
+### Contacts Tools
+
+| Tool | Description |
+|---|---|
+| `outlook_list_contacts` | List or search contacts |
+| `outlook_create_contact` | Create a new contact |
+| `outlook_delete_contact` | Delete a contact by EntryID |
+
+## Usage Examples
+
+### Check your inbox
+
+```
+> Show me my 5 most recent emails
+```
+
+The assistant calls `outlook_list_emails` with `count=5`.
+
+### Send an email
+
+```
+> Send an email to john@example.com with subject "Q3 Report" and
+  body "Hi John, please find the Q3 report attached."
+```
+
+The assistant calls `outlook_send_email`.
+
+### Search emails
+
+```
+> Find all unread emails from "Jane" this week
+```
+
+The assistant calls `outlook_search_emails` with `sender="Jane"`, `unread_only=true`, and a date range.
+
+### Check calendar
+
+```
+> What's on my calendar for next Monday?
+```
+
+The assistant calls `outlook_list_calendar` with appropriate start/end dates.
+
+## COM ProgID
+
+The client uses `Outlook.Application` as the COM ProgID. If Outlook is already running, it connects to the existing instance.
 
 ## Troubleshooting
 
-### "Could not connect to WPS Office Excel"
+### "Could not connect to Microsoft Outlook"
 
-- Ensure WPS Office is installed (the Excel/Spreadsheets component specifically)
-- Try launching WPS Excel manually once to ensure it's properly registered
-- Check that the COM ProgID `ET.Application` is registered (run `powershell Get-ChildItem HKLM:\Software\Classes\ | Where-Object { $_.PSChildName -like "*ET.Application*" }`)
+- Ensure Microsoft Outlook is installed and running
+- Verify Outlook is properly registered (the COM interface should be available)
+- If using a 64-bit version of Python, ensure a 64-bit version of Outlook is installed (or vice versa)
 
 ### "ModuleNotFoundError: No module named 'win32com'"
 
@@ -281,9 +345,8 @@ pip install pywin32
 
 ### COM errors / crashes
 
-- Ensure WPS Office is up to date
-- Try running with the window visible (`wps_show_window`) to see if there are UI dialogs
-- Some operations may not be supported in older WPS Office versions
+- Ensure Outlook is up to date
+- Some operations may trigger Outlook security prompts (Outlook's security model restricts programmatic access)
 
 ## License
 

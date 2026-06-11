@@ -1,8 +1,8 @@
 [project]
-name = "wps-mcp"
+name = "wps-excel-mcp"
 version = "0.1.0"
-description = "MCP server for WPS Office Excel automation"
-authors = [{name = "WPS MCP Developer"}]
+description = "MCP server for WPS Office Excel automation via COM"
+authors = [{name = "WPS Excel MCP Developer"}]
 requires-python = ">=3.10"
 dependencies = [
     "mcp>=1.0.0",
@@ -13,7 +13,8 @@ dependencies = [
 build-exe = ["pyinstaller>=6.0"]
 
 [project.scripts]
-wps-mcp = "wps_mcp.server:main"
+wps-excel-mcp = "wps_mcp.server:main"
+outlook-mcp = "outlook_mcp.server:main"
 
 [build-system]
 requires = ["setuptools>=68.0"]

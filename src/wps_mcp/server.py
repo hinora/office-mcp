@@ -40,7 +40,7 @@ logging.basicConfig(level=logging.INFO)
 
 # ── MCP Server Setup ───────────────────────────────────────────────────
 
-server = Server("wps-mcp")
+server = Server("wps-excel-mcp")
 
 # Dedicated STA thread executor for COM operations.
 # COM objects must be created and accessed from the same STA thread.
@@ -961,7 +961,7 @@ async def run_server() -> None:
 
 
 def main() -> None:
-    """Entry point for the wps-mcp command."""
+    """Entry point for the wps-excel-mcp command."""
     asyncio.run(run_server())
 
 

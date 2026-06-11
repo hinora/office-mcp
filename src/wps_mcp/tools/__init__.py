@@ -1,1 +1,1 @@
-"""Tools package for WPS MCP server."""
+"""Tools package for WPS Excel MCP server."""
