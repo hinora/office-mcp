@@ -1873,15 +1873,15 @@ TOOLS = [
                 },
                 "row_fields": {
                     "type": "string",
-                    "description": "Optional JSON array of field names for row labels (e.g., '["Category","SubCategory"]').",
+                    "description": "Optional JSON array of field names for row labels (e.g., [Category, SubCategory]).",
                 },
                 "column_fields": {
                     "type": "string",
-                    "description": "Optional JSON array of field names for column labels (e.g., '["Year"]').",
+                    "description": "Optional JSON array of field names for column labels (e.g., [Year]).",
                 },
                 "data_fields": {
                     "type": "string",
-                    "description": "Optional JSON array of field names for values (e.g., '["Amount"]').",
+                    "description": "Optional JSON array of field names for values (e.g., [Amount]).",
                 },
                 "sheet_name": {
                     "type": "string",
