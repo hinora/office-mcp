@@ -1278,6 +1278,747 @@ TOOLS = [
             "required": ["orientation"],
         },
     ),
+    # ── Formula ──
+    Tool(
+        name="wps_set_formula",
+        description="Set a formula in a cell (e.g., '=SUM(B2:B10)', '=A1*2').",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_ref": {
+                    "type": "string",
+                    "description": "Cell reference (e.g., 'A1').",
+                },
+                "formula": {
+                    "type": "string",
+                    "description": "The Excel formula, including leading '=' (e.g., '=SUM(B2:B10)', '=VLOOKUP(A1,D:E,2,FALSE)').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_ref", "formula"],
+        },
+    ),
+    Tool(
+        name="wps_get_formula",
+        description="Get the formula of a cell (not its computed value). Returns the formula string, or the literal value if no formula is set.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_ref": {
+                    "type": "string",
+                    "description": "Cell reference (e.g., 'A1').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_ref"],
+        },
+    ),
+    # ── Export ──
+    Tool(
+        name="wps_export_to_pdf",
+        description="Export the active workbook or a specific sheet to a PDF file.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "filepath": {
+                    "type": "string",
+                    "description": "Full path for the output PDF file (e.g., 'C:\\report.pdf').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name. If omitted, exports the entire workbook.",
+                },
+            },
+            "required": ["filepath"],
+        },
+    ),
+    # ── Find / Replace ──
+    Tool(
+        name="wps_find_replace",
+        description="Find and replace text across a sheet. Returns the number of replacements made.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "find_text": {
+                    "type": "string",
+                    "description": "Text to search for.",
+                },
+                "replace_text": {
+                    "type": "string",
+                    "description": "Replacement text.",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+                "match_case": {
+                    "type": "boolean",
+                    "description": "If True, match case. Default: false.",
+                    "default": False,
+                },
+                "match_whole": {
+                    "type": "boolean",
+                    "description": "If True, match whole cell content only. Default: false.",
+                    "default": False,
+                },
+            },
+            "required": ["find_text", "replace_text"],
+        },
+    ),
+    # ── Workbook Activation ──
+    Tool(
+        name="wps_activate_workbook",
+        description="Activate a specific workbook by name when multiple workbooks are open.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the workbook to activate.",
+                },
+            },
+            "required": ["name"],
+        },
+    ),
+    # ── Remove Duplicates ──
+    Tool(
+        name="wps_remove_duplicates",
+        description="Remove duplicate rows from a range. Optionally specify which columns to check for duplicates.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "range_ref": {
+                    "type": "string",
+                    "description": "Range to remove duplicates from (e.g., 'A1:D100').",
+                },
+                "columns": {
+                    "type": "string",
+                    "description": "Optional JSON array of 1-based column indices within the range to check (e.g., '[1,2]'). If omitted, all columns are used.",
+                },
+                "has_header": {
+                    "type": "boolean",
+                    "description": "Whether the range includes a header row. Default: true.",
+                    "default": True,
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["range_ref"],
+        },
+    ),
+    # ── Vertical Alignment ──
+    Tool(
+        name="wps_set_vertical_alignment",
+        description="Set vertical text alignment for a cell or range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                },
+                "alignment": {
+                    "type": "string",
+                    "description": "Vertical alignment: 'top', 'center', 'bottom', 'justify', 'distributed'.",
+                    "enum": ["top", "center", "bottom", "justify", "distributed"],
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_or_range", "alignment"],
+        },
+    ),
+    # ── Sheet Copy / Move ──
+    Tool(
+        name="wps_copy_sheet",
+        description="Create a copy of a worksheet within the active workbook.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "source_name": {
+                    "type": "string",
+                    "description": "Name of the sheet to copy.",
+                },
+                "new_name": {
+                    "type": "string",
+                    "description": "Optional new name for the copied sheet.",
+                },
+                "before": {
+                    "type": "string",
+                    "description": "Optional sheet name to insert the copy before.",
+                },
+                "after": {
+                    "type": "string",
+                    "description": "Optional sheet name to insert the copy after.",
+                },
+            },
+            "required": ["source_name"],
+        },
+    ),
+    Tool(
+        name="wps_move_sheet",
+        description="Move (reorder) a worksheet to a new position within the active workbook.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "source_name": {
+                    "type": "string",
+                    "description": "Name of the sheet to move.",
+                },
+                "before": {
+                    "type": "string",
+                    "description": "Optional sheet name to move before.",
+                },
+                "after": {
+                    "type": "string",
+                    "description": "Optional sheet name to move after. Default: moves to end.",
+                },
+            },
+            "required": ["source_name"],
+        },
+    ),
+    # ── Show / Hide Sheet ──
+    Tool(
+        name="wps_hide_sheet",
+        description="Hide a worksheet (make it not visible in the tab bar).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the sheet to hide.",
+                },
+            },
+            "required": ["name"],
+        },
+    ),
+    Tool(
+        name="wps_unhide_sheet",
+        description="Unhide a previously hidden worksheet.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the sheet to unhide.",
+                },
+            },
+            "required": ["name"],
+        },
+    ),
+    # ── Hyperlinks ──
+    Tool(
+        name="wps_add_hyperlink",
+        description="Add a hyperlink to a cell. Can link to URLs, files, or cell references.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_ref": {
+                    "type": "string",
+                    "description": "Cell reference (e.g., 'A1').",
+                },
+                "address": {
+                    "type": "string",
+                    "description": "URL, file path, or cell reference the link points to.",
+                },
+                "text_to_display": {
+                    "type": "string",
+                    "description": "Optional display text for the hyperlink.",
+                },
+                "screen_tip": {
+                    "type": "string",
+                    "description": "Optional tooltip text shown on hover.",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_ref", "address"],
+        },
+    ),
+    Tool(
+        name="wps_remove_hyperlink",
+        description="Remove hyperlinks from a cell or range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:D10') to remove hyperlinks from.",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_or_range"],
+        },
+    ),
+    # ── Conditional Formatting Delete ──
+    Tool(
+        name="wps_delete_conditional_format",
+        description="Remove all conditional formatting rules from a range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "range_ref": {
+                    "type": "string",
+                    "description": "Range to remove conditional formatting from (e.g., 'A1:A100').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["range_ref"],
+        },
+    ),
+    # ── Font Underline ──
+    Tool(
+        name="wps_set_font_underline",
+        description="Set font underline style for a cell or range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                },
+                "underline_style": {
+                    "type": "string",
+                    "description": "Underline style: 'none', 'single', 'double', 'singleAccounting', 'doubleAccounting'.",
+                    "enum": ["none", "single", "double", "singleAccounting", "doubleAccounting"],
+                    "default": "single",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["cell_or_range"],
+        },
+    ),
+    # ── Row / Column Grouping ──
+    Tool(
+        name="wps_group_rows",
+        description="Group rows together for outlining (collapse/expand).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "start_row": {
+                    "type": "integer",
+                    "description": "First row to group.",
+                },
+                "end_row": {
+                    "type": "integer",
+                    "description": "Last row to group.",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["start_row", "end_row"],
+        },
+    ),
+    Tool(
+        name="wps_ungroup_rows",
+        description="Ungroup previously grouped rows.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "start_row": {
+                    "type": "integer",
+                    "description": "First row to ungroup.",
+                },
+                "end_row": {
+                    "type": "integer",
+                    "description": "Last row to ungroup.",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["start_row", "end_row"],
+        },
+    ),
+    Tool(
+        name="wps_group_columns",
+        description="Group columns together for outlining (collapse/expand).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "start_col": {
+                    "type": "integer",
+                    "description": "First column to group (1=A, 2=B, etc).",
+                },
+                "end_col": {
+                    "type": "integer",
+                    "description": "Last column to group (1=A, 2=B, etc).",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["start_col", "end_col"],
+        },
+    ),
+    Tool(
+        name="wps_ungroup_columns",
+        description="Ungroup previously grouped columns.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "start_col": {
+                    "type": "integer",
+                    "description": "First column to ungroup (1=A, 2=B, etc).",
+                },
+                "end_col": {
+                    "type": "integer",
+                    "description": "Last column to ungroup (1=A, 2=B, etc).",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["start_col", "end_col"],
+        },
+    ),
+    # ── Page Margins / Headers ──
+    Tool(
+        name="wps_set_page_margins",
+        description="Set page margins (in points) for a sheet.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "left": {
+                    "type": "number",
+                    "description": "Left margin in points.",
+                },
+                "right": {
+                    "type": "number",
+                    "description": "Right margin in points.",
+                },
+                "top": {
+                    "type": "number",
+                    "description": "Top margin in points.",
+                },
+                "bottom": {
+                    "type": "number",
+                    "description": "Bottom margin in points.",
+                },
+                "header": {
+                    "type": "number",
+                    "description": "Header margin in points.",
+                },
+                "footer": {
+                    "type": "number",
+                    "description": "Footer margin in points.",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="wps_set_header_footer",
+        description="Set custom header and footer text for a sheet. Format codes: &P (page #), &N (total pages), &D (date), &T (time), &F (filename), &A (sheet name), &B (bold), &I (italic).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "left_header": {
+                    "type": "string",
+                    "description": "Left header text.",
+                    "default": "",
+                },
+                "center_header": {
+                    "type": "string",
+                    "description": "Center header text.",
+                    "default": "",
+                },
+                "right_header": {
+                    "type": "string",
+                    "description": "Right header text.",
+                    "default": "",
+                },
+                "left_footer": {
+                    "type": "string",
+                    "description": "Left footer text.",
+                    "default": "",
+                },
+                "center_footer": {
+                    "type": "string",
+                    "description": "Center footer text (e.g., 'Page &P of &N').",
+                    "default": "",
+                },
+                "right_footer": {
+                    "type": "string",
+                    "description": "Right footer text.",
+                    "default": "",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    # ── Text to Columns ──
+    Tool(
+        name="wps_text_to_columns",
+        description="Split text in a column into multiple columns using a delimiter (like comma, space, tab).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "range_ref": {
+                    "type": "string",
+                    "description": "Single-column range to split (e.g., 'A1:A100').",
+                },
+                "delimiter": {
+                    "type": "string",
+                    "description": "Delimiter character: ',' (comma), ';' (semicolon), '\\t' (tab), ' ' (space), '|' (pipe). Default: ','.",
+                    "default": ",",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["range_ref"],
+        },
+    ),
+    # ── Named Ranges ──
+    Tool(
+        name="wps_create_named_range",
+        description="Create a named range in the active workbook.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name for the named range.",
+                },
+                "refers_to": {
+                    "type": "string",
+                    "description": "The range reference formula (e.g., '=Sheet1!$A$1:$D$10', '=Sheet1!$A:$A').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name for scope.",
+                },
+            },
+            "required": ["name", "refers_to"],
+        },
+    ),
+    Tool(
+        name="wps_delete_named_range",
+        description="Delete a named range from the active workbook.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the named range to delete.",
+                },
+            },
+            "required": ["name"],
+        },
+    ),
+    Tool(
+        name="wps_list_named_ranges",
+        description="List all named ranges in the active workbook.",
+        inputSchema={
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    ),
+    # ── Pivot Table ──
+    Tool(
+        name="wps_create_pivot_table",
+        description="Create a pivot table from a source data range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "source_range": {
+                    "type": "string",
+                    "description": "Source data range (e.g., 'A1:F100').",
+                },
+                "dest_cell": {
+                    "type": "string",
+                    "description": "Top-left cell where the pivot table will be placed (e.g., 'H1').",
+                },
+                "pivot_name": {
+                    "type": "string",
+                    "description": "Optional name for the pivot table.",
+                    "default": "PivotTable1",
+                },
+                "row_fields": {
+                    "type": "string",
+                    "description": "Optional JSON array of field names for row labels (e.g., '["Category","SubCategory"]').",
+                },
+                "column_fields": {
+                    "type": "string",
+                    "description": "Optional JSON array of field names for column labels (e.g., '["Year"]').",
+                },
+                "data_fields": {
+                    "type": "string",
+                    "description": "Optional JSON array of field names for values (e.g., '["Amount"]').",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name for both source and destination.",
+                },
+            },
+            "required": ["source_range", "dest_cell"],
+        },
+    ),
+    # ── Sparklines ──
+    Tool(
+        name="wps_add_sparkline",
+        description="Add a sparkline (mini in-cell chart) to a cell.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "source_range": {
+                    "type": "string",
+                    "description": "Data range for the sparkline (e.g., 'A1:A10').",
+                },
+                "dest_cell": {
+                    "type": "string",
+                    "description": "Cell where the sparkline will be placed.",
+                },
+                "spark_type": {
+                    "type": "string",
+                    "description": "Sparkline type: 'line', 'column', or 'winloss'.",
+                    "enum": ["line", "column", "winloss"],
+                    "default": "line",
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["source_range", "dest_cell"],
+        },
+    ),
+    # ── Insert Picture / Shape ──
+    Tool(
+        name="wps_insert_picture",
+        description="Insert an image (.png, .jpg, etc.) into a sheet.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "filepath": {
+                    "type": "string",
+                    "description": "Full path to the image file.",
+                },
+                "left": {
+                    "type": "number",
+                    "description": "Left position in points. Default: 100.",
+                    "default": 100,
+                },
+                "top": {
+                    "type": "number",
+                    "description": "Top position in points. Default: 100.",
+                    "default": 100,
+                },
+                "width": {
+                    "type": "number",
+                    "description": "Width in points. Default: 200.",
+                    "default": 200,
+                },
+                "height": {
+                    "type": "number",
+                    "description": "Height in points. Default: 150.",
+                    "default": 150,
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": ["filepath"],
+        },
+    ),
+    Tool(
+        name="wps_insert_shape",
+        description="Insert a drawing shape (rectangle, oval, line, arrow, textbox) into a sheet.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "shape_type": {
+                    "type": "string",
+                    "description": "Shape type: 'rectangle', 'oval', 'line', 'arrow', 'textbox'.",
+                    "enum": ["rectangle", "oval", "line", "arrow", "textbox"],
+                    "default": "rectangle",
+                },
+                "left": {
+                    "type": "number",
+                    "description": "Left position in points. Default: 100.",
+                    "default": 100,
+                },
+                "top": {
+                    "type": "number",
+                    "description": "Top position in points. Default: 100.",
+                    "default": 100,
+                },
+                "width": {
+                    "type": "number",
+                    "description": "Width in points. Default: 200.",
+                    "default": 200,
+                },
+                "height": {
+                    "type": "number",
+                    "description": "Height in points. Default: 100.",
+                    "default": 100,
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": [],
+        },
+    ),
+    # ── Gridlines ──
+    Tool(
+        name="wps_toggle_gridlines",
+        description="Show or hide gridlines on the active sheet.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "visible": {
+                    "type": "boolean",
+                    "description": "True to show gridlines, False to hide them. Default: true.",
+                    "default": True,
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Optional sheet name.",
+                },
+            },
+            "required": [],
+        },
+    ),
 ]
 
 
@@ -1699,6 +2440,230 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSExcelClient) -> st
     elif name == "wps_set_page_orientation":
         client.set_page_orientation(args["orientation"], args.get("sheet_name"))
         result = {"message": f"Set page orientation to {args['orientation']}"}
+
+    # ── Formula ──
+    elif name == "wps_set_formula":
+        client.set_formula(args["cell_ref"], args["formula"], args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_ref']} formula = {args['formula']}"}
+
+    elif name == "wps_get_formula":
+        formula = client.get_formula(args["cell_ref"], args.get("sheet_name"))
+        result = {"cell": args["cell_ref"], "formula": formula}
+
+    # ── Export ──
+    elif name == "wps_export_to_pdf":
+        saved_path = client.export_to_pdf(args["filepath"], args.get("sheet_name"))
+        result = {"message": f"Exported to PDF: {saved_path}", "path": saved_path}
+
+    # ── Find / Replace ──
+    elif name == "wps_find_replace":
+        count = client.find_replace(
+            args["find_text"],
+            args["replace_text"],
+            args.get("sheet_name"),
+            args.get("match_case", False),
+            args.get("match_whole", False),
+        )
+        result = {"message": f"Replaced {count} occurrences of '{args['find_text']}' with '{args['replace_text']}'", "replacements": count}
+
+    # ── Workbook Activation ──
+    elif name == "wps_activate_workbook":
+        wb_name = client.activate_workbook(args["name"])
+        result = {"message": f"Activated workbook: {wb_name}", "workbook_name": wb_name}
+
+    # ── Remove Duplicates ──
+    elif name == "wps_remove_duplicates":
+        columns = None
+        if args.get("columns"):
+            columns = json.loads(args["columns"])
+        client.remove_duplicates(
+            args["range_ref"],
+            columns,
+            args.get("has_header", True),
+            args.get("sheet_name"),
+        )
+        result = {"message": f"Removed duplicates from {args['range_ref']}"}
+
+    # ── Vertical Alignment ──
+    elif name == "wps_set_vertical_alignment":
+        client.set_vertical_alignment(
+            args["cell_or_range"],
+            args["alignment"],
+            args.get("sheet_name"),
+        )
+        result = {"message": f"Set {args['cell_or_range']} vertical alignment = {args['alignment']}"}
+
+    # ── Sheet Copy / Move ──
+    elif name == "wps_copy_sheet":
+        new_name = client.copy_sheet(
+            args["source_name"],
+            args.get("new_name"),
+            args.get("before"),
+            args.get("after"),
+        )
+        result = {"message": f"Copied sheet '{args['source_name']}' to '{new_name}'", "sheet_name": new_name}
+
+    elif name == "wps_move_sheet":
+        moved_name = client.move_sheet(
+            args["source_name"],
+            args.get("before"),
+            args.get("after"),
+        )
+        result = {"message": f"Moved sheet '{args['source_name']}'", "sheet_name": moved_name}
+
+    # ── Show / Hide Sheet ──
+    elif name == "wps_hide_sheet":
+        client.hide_sheet(args["name"])
+        result = {"message": f"Hid sheet: {args['name']}"}
+
+    elif name == "wps_unhide_sheet":
+        client.unhide_sheet(args["name"])
+        result = {"message": f"Unhid sheet: {args['name']}"}
+
+    # ── Hyperlinks ──
+    elif name == "wps_add_hyperlink":
+        client.add_hyperlink(
+            args["cell_ref"],
+            args["address"],
+            args.get("text_to_display"),
+            args.get("screen_tip"),
+            args.get("sheet_name"),
+        )
+        result = {"message": f"Added hyperlink to {args['cell_ref']} -> {args['address']}"}
+
+    elif name == "wps_remove_hyperlink":
+        client.remove_hyperlink(args["cell_or_range"], args.get("sheet_name"))
+        result = {"message": f"Removed hyperlinks from {args['cell_or_range']}"}
+
+    # ── Conditional Formatting Delete ──
+    elif name == "wps_delete_conditional_format":
+        client.delete_conditional_format(args["range_ref"], args.get("sheet_name"))
+        result = {"message": f"Removed conditional formatting from {args['range_ref']}"}
+
+    # ── Font Underline ──
+    elif name == "wps_set_font_underline":
+        style = args.get("underline_style", "single")
+        client.set_font_underline(args["cell_or_range"], style, args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} underline = {style}"}
+
+    # ── Row / Column Grouping ──
+    elif name == "wps_group_rows":
+        client.group_rows(args["start_row"], args["end_row"], args.get("sheet_name"))
+        result = {"message": f"Grouped rows {args['start_row']} to {args['end_row']}"}
+
+    elif name == "wps_ungroup_rows":
+        client.ungroup_rows(args["start_row"], args["end_row"], args.get("sheet_name"))
+        result = {"message": f"Ungrouped rows {args['start_row']} to {args['end_row']}"}
+
+    elif name == "wps_group_columns":
+        client.group_columns(args["start_col"], args["end_col"], args.get("sheet_name"))
+        result = {"message": f"Grouped columns {args['start_col']} to {args['end_col']}"}
+
+    elif name == "wps_ungroup_columns":
+        client.ungroup_columns(args["start_col"], args["end_col"], args.get("sheet_name"))
+        result = {"message": f"Ungrouped columns {args['start_col']} to {args['end_col']}"}
+
+    # ── Page Margins / Headers ──
+    elif name == "wps_set_page_margins":
+        client.set_page_margins(
+            left=args.get("left"),
+            right=args.get("right"),
+            top=args.get("top"),
+            bottom=args.get("bottom"),
+            header=args.get("header"),
+            footer=args.get("footer"),
+            sheet_name=args.get("sheet_name"),
+        )
+        result = {"message": "Set page margins."}
+
+    elif name == "wps_set_header_footer":
+        client.set_header_footer(
+            left_header=args.get("left_header", ""),
+            center_header=args.get("center_header", ""),
+            right_header=args.get("right_header", ""),
+            left_footer=args.get("left_footer", ""),
+            center_footer=args.get("center_footer", ""),
+            right_footer=args.get("right_footer", ""),
+            sheet_name=args.get("sheet_name"),
+        )
+        result = {"message": "Set header and footer."}
+
+    # ── Text to Columns ──
+    elif name == "wps_text_to_columns":
+        delim = args.get("delimiter", ",")
+        client.text_to_columns(args["range_ref"], delim, args.get("sheet_name"))
+        result = {"message": f"Split {args['range_ref']} by '{delim}'"}
+
+    # ── Named Ranges ──
+    elif name == "wps_create_named_range":
+        name = client.create_named_range(
+            args["name"],
+            args["refers_to"],
+            args.get("sheet_name"),
+        )
+        result = {"message": f"Created named range: {name}", "name": name}
+
+    elif name == "wps_delete_named_range":
+        client.delete_named_range(args["name"])
+        result = {"message": f"Deleted named range: {args['name']}"}
+
+    elif name == "wps_list_named_ranges":
+        result = {"named_ranges": client.list_named_ranges()}
+
+    # ── Pivot Table ──
+    elif name == "wps_create_pivot_table":
+        row_fields = json.loads(args["row_fields"]) if args.get("row_fields") else None
+        col_fields = json.loads(args["column_fields"]) if args.get("column_fields") else None
+        data_fields = json.loads(args["data_fields"]) if args.get("data_fields") else None
+        pt_name = client.create_pivot_table(
+            args["source_range"],
+            args["dest_cell"],
+            args.get("pivot_name", "PivotTable1"),
+            row_fields,
+            col_fields,
+            data_fields,
+            args.get("sheet_name"),
+        )
+        result = {"message": f"Created pivot table: {pt_name}", "pivot_name": pt_name}
+
+    # ── Sparklines ──
+    elif name == "wps_add_sparkline":
+        client.add_sparkline(
+            args["source_range"],
+            args["dest_cell"],
+            args.get("spark_type", "line"),
+            args.get("sheet_name"),
+        )
+        result = {"message": f"Added {args.get('spark_type', 'line')} sparkline in {args['dest_cell']}"}
+
+    # ── Insert Picture / Shape ──
+    elif name == "wps_insert_picture":
+        pic_name = client.insert_picture(
+            args["filepath"],
+            args.get("left", 100),
+            args.get("top", 100),
+            args.get("width", 200),
+            args.get("height", 150),
+            args.get("sheet_name"),
+        )
+        result = {"message": f"Inserted picture: {pic_name}", "shape_name": pic_name}
+
+    elif name == "wps_insert_shape":
+        shape_name = client.insert_shape(
+            args.get("shape_type", "rectangle"),
+            args.get("left", 100),
+            args.get("top", 100),
+            args.get("width", 200),
+            args.get("height", 100),
+            args.get("sheet_name"),
+        )
+        result = {"message": f"Inserted shape: {shape_name}", "shape_name": shape_name}
+
+    # ── Gridlines ──
+    elif name == "wps_toggle_gridlines":
+        visible = args.get("visible", True)
+        client.toggle_gridlines(visible, args.get("sheet_name"))
+        result = {"message": f"Gridlines {'shown' if visible else 'hidden'}."}
 
     else:
         raise ValueError(f"Unknown tool: {name}")

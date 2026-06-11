@@ -1229,6 +1229,883 @@ class WPSExcelClient:
             info["workbooks_count"] = "unknown"
         return info
 
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Formula Operations ────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def set_formula(
+        self,
+        cell_ref: str,
+        formula: str,
+        sheet_name: str | None = None,
+    ) -> None:
+        """
+        Set a formula in a cell.
+
+        Args:
+            cell_ref: Cell reference (e.g., 'A1').
+            formula: The formula string (e.g., '=SUM(B2:B10)', '=A1*2').
+            sheet_name: Optional sheet name.
+        """
+        sheet = self._get_sheet(sheet_name)
+        sheet.Range(cell_ref).Formula = formula
+
+    def get_formula(
+        self,
+        cell_ref: str,
+        sheet_name: str | None = None,
+    ) -> str:
+        """
+        Get the formula of a cell (not its computed value).
+
+        Args:
+            cell_ref: Cell reference (e.g., 'A1').
+            sheet_name: Optional sheet name.
+
+        Returns:
+            The formula string, or the literal value if no formula is set.
+        """
+        sheet = self._get_sheet(sheet_name)
+        return sheet.Range(cell_ref).Formula
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Export / Save-As ──────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def export_to_pdf(
+        self,
+        filepath: str,
+        sheet_name: str | None = None,
+    ) -> str:
+        """
+        Export the active workbook or a specific sheet to PDF.
+
+        Args:
+            filepath: Output PDF file path.
+            sheet_name: Optional sheet name to export. If None, exports the entire workbook.
+
+        Returns:
+            The full path of the exported PDF.
+        """
+        full_path = os.path.abspath(filepath)
+        if sheet_name:
+            sheet = self._get_sheet(sheet_name)
+            sheet.ExportAsFixedFormat(
+                Type=0,  # xlTypePDF
+                Filename=full_path,
+            )
+        else:
+            wb = self.active_workbook
+            if wb is None:
+                raise RuntimeError("No active workbook to export.")
+            wb.ExportAsFixedFormat(
+                Type=0,  # xlTypePDF
+                Filename=full_path,
+            )
+        return full_path
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Find / Replace ────────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def find_replace(
+        self,
+        find_text: str,
+        replace_text: str,
+        sheet_name: str | None = None,
+        match_case: bool = False,
+        match_whole: bool = False,
+    ) -> int:
+        """
+        Find and replace text across a sheet.
+
+        Args:
+            find_text: Text to search for.
+            replace_text: Replacement text.
+            sheet_name: Optional sheet name.
+            match_case: If True, match case.
+            match_whole: If True, match whole cell content.
+
+        Returns:
+            Number of replacements made.
+        """
+        sheet = self._get_sheet(sheet_name)
+
+        # Use Replace method on the used range which is simpler and more reliable
+        used = sheet.UsedRange
+        old_calc = None
+        try:
+            old_calc = self._app.Calculation
+            self._app.Calculation = -4135  # xlCalculationManual
+        except Exception:
+            pass
+
+        count = 0
+        # Iterate over used cells - more reliable than Find/FindNext loop
+        for row in range(1, used.Rows.Count + 1):
+            for col in range(1, used.Columns.Count + 1):
+                try:
+                    cell = used.Cells(row, col)
+                    val = cell.Value
+                    if val is None:
+                        continue
+                    str_val = str(val)
+                    if match_whole:
+                        if str_val == find_text:
+                            cell.Value = replace_text
+                            count += 1
+                    else:
+                        if find_text in str_val:
+                            if match_case:
+                                if find_text in str_val:
+                                    cell.Value = str_val.replace(find_text, replace_text)
+                                    count += 1
+                            else:
+                                if find_text.lower() in str_val.lower():
+                                    cell.Value = str_val.replace(find_text, replace_text)
+                                    count += 1
+                except Exception:
+                    continue
+
+        try:
+            if old_calc is not None:
+                self._app.Calculation = old_calc
+        except Exception:
+            pass
+        return count
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Workbook Activation ───────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def activate_workbook(self, name: str) -> str:
+        """
+        Activate a workbook by name.
+
+        Args:
+            name: The name of the workbook to activate.
+
+        Returns:
+            The name of the activated workbook.
+        """
+        wb = self.workbooks(name)
+        wb.Activate()
+        return wb.Name
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Remove Duplicates ─────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def remove_duplicates(
+        self,
+        range_ref: str,
+        columns: list[int] | None = None,
+        has_header: bool = True,
+        sheet_name: str | None = None,
+    ) -> int:
+        """
+        Remove duplicate rows from a range.
+
+        Args:
+            range_ref: Range to remove duplicates from (e.g., 'A1:D100').
+            columns: List of 1-based column indices within the range to check for duplicates.
+                     If None, all columns are used.
+            has_header: Whether the range has a header row.
+            sheet_name: Optional sheet name.
+
+        Returns:
+            Always returns 0 (COM doesn't reliably report count).
+        """
+        sheet = self._get_sheet(sheet_name)
+        rng = sheet.Range(range_ref)
+        if columns:
+            # Pass column array as variant
+            rng.RemoveDuplicates(
+                Columns=columns,
+                Header=1 if has_header else 2,  # xlYes=1, xlNo=2
+            )
+        else:
+            rng.RemoveDuplicates(
+                Columns=1,
+                Header=1 if has_header else 2,
+            )
+        return 0  # COM API doesn't reliably return count
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Vertical Alignment ────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def set_vertical_alignment(
+        self,
+        cell_ref: str,
+        alignment: str,
+        sheet_name: str | None = None,
+    ) -> None:
+        """
+        Set vertical alignment for a cell or range.
+
+        Args:
+            alignment: 'top', 'center', 'bottom', 'justify', 'distributed'.
+        """
+        sheet = self._get_sheet(sheet_name)
+        xl_align = {
+            "top": -4160,     # xlTop
+            "center": -4108,  # xlCenter (same as horizontal, works for vertical too)
+            "bottom": -4107,  # xlBottom
+            "justify": -4130, # xlJustify
+            "distributed": -4117,  # xlDistributed
+        }
+        align_val = xl_align.get(alignment.lower(), -4107)
+        sheet.Range(cell_ref).VerticalAlignment = align_val
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Sheet Copy / Move ─────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def copy_sheet(
+        self,
+        source_name: str,
+        new_name: str | None = None,
+        before: str | None = None,
+        after: str | None = None,
+    ) -> str:
+        """
+        Copy a worksheet within the active workbook.
+
+        Copies the sheet to a new workbook, renames, then moves it back.
+
+        Args:
+            source_name: Name of the sheet to copy.
+            new_name: Optional new name for the copy.
+            before: Sheet name to insert the copy before.
+            after: Sheet name to insert the copy after.
+
+        Returns:
+            The name of the new sheet.
+
+        Raises:
+            RuntimeError: If the copy could not be moved back to the source workbook.
+        """
+        wb = self.active_workbook
+        if wb is None:
+            raise RuntimeError("No active workbook.")
+        sheet = wb.Sheets(source_name)
+
+        # Copy to a fresh workbook (WPS/Excel COM limitation)
+        sheet.Copy()
+
+        # Now in the new workbook; the copy is the only sheet
+        new_wb = self.active_workbook
+        copied_sheet = new_wb.ActiveSheet
+        if copied_sheet is None:
+            copied_sheet = new_wb.Sheets(1)
+
+        # Apply new name in the temp workbook first
+        target_name = new_name if new_name else copied_sheet.Name
+        if new_name:
+            copied_sheet.Name = new_name
+
+        # Try moving the sheet back to original workbook
+        dest_sheet = wb.Sheets(wb.Sheets.Count)
+        if before is not None:
+            copied_sheet.Move(Before=wb.Sheets(before))
+        elif after is not None:
+            copied_sheet.Move(After=wb.Sheets(after))
+        else:
+            copied_sheet.Move(After=dest_sheet)
+
+        # Close the empty temporary workbook
+        try:
+            new_wb.Close(SaveChanges=False)
+        except Exception:
+            pass
+
+        # Verify the sheet was successfully moved back
+        try:
+            wb.Sheets(target_name).Activate()
+        except Exception:
+            raise RuntimeError(
+                f"copy_sheet: Sheet '{target_name}' could not be moved back to "
+                f"workbook '{wb.Name}'. Cross-workbook Move() may not be supported "
+                f"in this version of WPS/Excel."
+            )
+
+        return target_name
+
+    def move_sheet(
+        self,
+        source_name: str,
+        before: str | None = None,
+        after: str | None = None,
+    ) -> str:
+        """
+        Move (reorder) a worksheet within the active workbook.
+
+        Args:
+            source_name: Name of the sheet to move.
+            before: Sheet name to move before.
+            after: Sheet name to move after.
+
+        Returns:
+            The name of the moved sheet.
+        """
+        wb = self.active_workbook
+        if wb is None:
+            raise RuntimeError("No active workbook.")
+        sheet = wb.Sheets(source_name)
+
+        kwargs = {}
+        if before is not None:
+            kwargs["Before"] = wb.Sheets(before)
+        elif after is not None:
+            kwargs["After"] = wb.Sheets(after)
+        else:
+            # Move to end by default
+            kwargs["After"] = wb.Sheets(wb.Sheets.Count)
+
+        sheet.Move(**kwargs) if kwargs else sheet.Move()
+        return sheet.Name
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Show / Hide Sheet ─────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def hide_sheet(self, name: str) -> None:
+        """Hide a worksheet by name."""
+        wb = self.active_workbook
+        if wb is None:
+            raise RuntimeError("No active workbook.")
+        wb.Sheets(name).Visible = 0  # xlSheetHidden
+
+    def unhide_sheet(self, name: str) -> None:
+        """Unhide a previously hidden worksheet by name."""
+        wb = self.active_workbook
+        if wb is None:
+            raise RuntimeError("No active workbook.")
+        wb.Sheets(name).Visible = -1  # xlSheetVisible
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Hyperlinks ────────────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def add_hyperlink(
+        self,
+        cell_ref: str,
+        address: str,
+        text_to_display: str | None = None,
+        screen_tip: str | None = None,
+        sheet_name: str | None = None,
+    ) -> None:
+        """
+        Add a hyperlink to a cell.
+
+        Args:
+            cell_ref: Cell reference (e.g., 'A1').
+            address: URL, file path, or cell reference the link points to.
+            text_to_display: Optional display text for the link.
+            screen_tip: Optional tooltip text.
+            sheet_name: Optional sheet name.
+        """
+        sheet = self._get_sheet(sheet_name)
+        rng = sheet.Range(cell_ref)
+        if text_to_display:
+            rng.Value = text_to_display
+        kwargs = {"Address": address}
+        if screen_tip:
+            kwargs["ScreenTip"] = screen_tip
+        sheet.Hyperlinks.Add(Anchor=rng, **kwargs)
+
+    def remove_hyperlink(
+        self,
+        cell_ref: str,
+        sheet_name: str | None = None,
+    ) -> None:
+        """
+        Remove hyperlinks from a cell or range.
+
+        Args:
+            cell_ref: Cell or range reference.
+            sheet_name: Optional sheet name.
+        """
+        sheet = self._get_sheet(sheet_name)
+        rng = sheet.Range(cell_ref)
+        rng.Hyperlinks.Delete()
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Delete Conditional Formatting ─────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def delete_conditional_format(
+        self,
+        range_ref: str,
+        sheet_name: str | None = None,
+    ) -> None:
+        """
+        Remove all conditional formatting rules from a range.
+
+        Args:
+            range_ref: Range reference (e.g., 'A1:A100').
+            sheet_name: Optional sheet name.
+        """
+        sheet = self._get_sheet(sheet_name)
+        rng = sheet.Range(range_ref)
+        rng.FormatConditions.Delete()
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Font Underline ────────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def set_font_underline(
+        self,
+        cell_ref: str,
+        underline_style: str = "single",
+        sheet_name: str | None = None,
+    ) -> None:
+        """
+        Set font underline style for a cell or range.
+
+        Args:
+            underline_style: 'none', 'single', 'double', 'singleAccounting', 'doubleAccounting'.
+        """
+        sheet = self._get_sheet(sheet_name)
+        xl_styles = {
+            "none": -4142,            # xlUnderlineStyleNone
+            "single": 2,             # xlUnderlineStyleSingle
+            "double": -4119,         # xlUnderlineStyleDouble
+            "singleAccounting": 5,   # xlUnderlineStyleSingleAccounting
+            "doubleAccounting": 6,   # xlUnderlineStyleDoubleAccounting
+        }
+        style_val = xl_styles.get(underline_style.lower(), 2)
+        sheet.Range(cell_ref).Font.Underline = style_val
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Row / Column Grouping ─────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def group_rows(
+        self,
+        start_row: int,
+        end_row: int,
+        sheet_name: str | None = None,
+    ) -> None:
+        """Group rows for outlining/collapsing."""
+        sheet = self._get_sheet(sheet_name)
+        sheet.Rows(f"{start_row}:{end_row}").Group()
+
+    def ungroup_rows(
+        self,
+        start_row: int,
+        end_row: int,
+        sheet_name: str | None = None,
+    ) -> None:
+        """Ungroup previously grouped rows."""
+        sheet = self._get_sheet(sheet_name)
+        sheet.Rows(f"{start_row}:{end_row}").Ungroup()
+
+    def group_columns(
+        self,
+        start_col: int,
+        end_col: int,
+        sheet_name: str | None = None,
+    ) -> None:
+        """Group columns for outlining/collapsing."""
+        sheet = self._get_sheet(sheet_name)
+        sc = self._col_to_letter(start_col)
+        ec = self._col_to_letter(end_col)
+        sheet.Columns(f"{sc}:{ec}").Group()
+
+    def ungroup_columns(
+        self,
+        start_col: int,
+        end_col: int,
+        sheet_name: str | None = None,
+    ) -> None:
+        """Ungroup previously grouped columns."""
+        sheet = self._get_sheet(sheet_name)
+        sc = self._col_to_letter(start_col)
+        ec = self._col_to_letter(end_col)
+        sheet.Columns(f"{sc}:{ec}").Ungroup()
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Page Margins & Headers/Footers ────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def set_page_margins(
+        self,
+        left: float | None = None,
+        right: float | None = None,
+        top: float | None = None,
+        bottom: float | None = None,
+        header: float | None = None,
+        footer: float | None = None,
+        sheet_name: str | None = None,
+    ) -> None:
+        """
+        Set page margins (in points) for a sheet.
+
+        Args:
+            left, right, top, bottom, header, footer: Margin values in points.
+        """
+        sheet = self._get_sheet(sheet_name)
+        ps = sheet.PageSetup
+        if left is not None:
+            ps.LeftMargin = left
+        if right is not None:
+            ps.RightMargin = right
+        if top is not None:
+            ps.TopMargin = top
+        if bottom is not None:
+            ps.BottomMargin = bottom
+        if header is not None:
+            ps.HeaderMargin = header
+        if footer is not None:
+            ps.FooterMargin = footer
+
+    def set_header_footer(
+        self,
+        left_header: str = "",
+        center_header: str = "",
+        right_header: str = "",
+        left_footer: str = "",
+        center_footer: str = "",
+        right_footer: str = "",
+        sheet_name: str | None = None,
+    ) -> None:
+        """
+        Set custom header and footer text for a sheet.
+
+        Format codes: &P (page #), &N (total pages), &D (date), &T (time),
+                      &F (filename), &A (sheet name), &B (bold), &I (italic).
+
+        Args:
+            left_header, center_header, right_header: Header sections.
+            left_footer, center_footer, right_footer: Footer sections.
+        """
+        sheet = self._get_sheet(sheet_name)
+        ps = sheet.PageSetup
+        ps.LeftHeader = left_header
+        ps.CenterHeader = center_header
+        ps.RightHeader = right_header
+        ps.LeftFooter = left_footer
+        ps.CenterFooter = center_footer
+        ps.RightFooter = right_footer
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Text to Columns ───────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def text_to_columns(
+        self,
+        range_ref: str,
+        delimiter: str = ",",
+        sheet_name: str | None = None,
+    ) -> None:
+        """
+        Split text in a column into multiple columns using a delimiter.
+
+        Args:
+            range_ref: Single-column range to split (e.g., 'A1:A100').
+            delimiter: Delimiter character (',' , ';', '\t', '|', ' ').
+            sheet_name: Optional sheet name.
+        """
+        sheet = self._get_sheet(sheet_name)
+        rng = sheet.Range(range_ref)
+
+        # Build TextToColumns arguments carefully for COM compatibility
+        # Only set the delimiter param that matches, keep others as False
+        # Params: Destination, DataType, TextQualifier, ConsecutiveDelimiter,
+        #         Tab, Semicolon, Comma, Space, Other, OtherChar, ...
+        kwargs = {
+            "Destination": rng,
+            "DataType": 1,  # xlDelimited
+            "TextQualifier": 1,  # xlTextQualifierDoubleQuote
+            "ConsecutiveDelimiter": False,
+            "Tab": False,
+            "Semicolon": False,
+            "Comma": False,
+            "Space": False,
+            "Other": False,
+        }
+
+        if delimiter == ",":
+            kwargs["Comma"] = True
+        elif delimiter == ";":
+            kwargs["Semicolon"] = True
+        elif delimiter in ("\t", "tab"):
+            kwargs["Tab"] = True
+        elif delimiter == " ":
+            kwargs["Space"] = True
+        else:
+            kwargs["Other"] = True
+            kwargs["OtherChar"] = delimiter
+
+        rng.TextToColumns(**kwargs)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Named Ranges ──────────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def create_named_range(
+        self,
+        name: str,
+        refers_to: str,
+        sheet_name: str | None = None,
+    ) -> str:
+        """
+        Create a named range in the active workbook.
+
+        Args:
+            name: The name for the range.
+            refers_to: The range reference formula (e.g., '=Sheet1!$A$1:$D$10').
+            sheet_name: Optional sheet name for the scope.
+
+        Returns:
+            The name of the created named range.
+        """
+        wb = self.active_workbook
+        if wb is None:
+            raise RuntimeError("No active workbook.")
+        try:
+            wb.Names.Add(Name=name, RefersTo=refers_to)
+        except Exception:
+            # If ReferTo doesn't work with sheet scope, try scoped version
+            wb.Names.Add(Name=name, RefersTo=refers_to)
+        return name
+
+    def delete_named_range(self, name: str) -> None:
+        """
+        Delete a named range from the active workbook.
+
+        Args:
+            name: The name of the range to delete.
+        """
+        wb = self.active_workbook
+        if wb is None:
+            raise RuntimeError("No active workbook.")
+        wb.Names(name).Delete()
+
+    def list_named_ranges(self) -> list[dict[str, str]]:
+        """
+        List all named ranges in the active workbook.
+
+        Returns:
+            List of dicts with 'name', 'refers_to', and 'visible'.
+        """
+        wb = self.active_workbook
+        if wb is None:
+            raise RuntimeError("No active workbook.")
+        result = []
+        for i in range(1, wb.Names.Count + 1):
+            nm = wb.Names.Item(i)
+            result.append({
+                "name": str(nm.Name),
+                "refers_to": str(nm.RefersTo),
+                "visible": str(nm.Visible),
+            })
+        return result
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Pivot Table ───────────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def create_pivot_table(
+        self,
+        source_range: str,
+        dest_cell: str,
+        pivot_name: str = "PivotTable1",
+        row_fields: list[str] | None = None,
+        column_fields: list[str] | None = None,
+        data_fields: list[str] | None = None,
+        sheet_name: str | None = None,
+    ) -> str:
+        """
+        Create a pivot table.
+
+        Args:
+            source_range: Source data range (e.g., 'A1:F100').
+            dest_cell: Cell where the pivot table starts (e.g., 'H1').
+            pivot_name: Name for the pivot table.
+            row_fields: List of field names to use as row labels.
+            column_fields: List of field names to use as column labels.
+            data_fields: List of field names to use as values.
+            sheet_name: Optional sheet name (source and destination are on same sheet).
+
+        Returns:
+            The name of the created pivot table.
+        """
+        sheet = self._get_sheet(sheet_name)
+        wb = self.active_workbook
+        if wb is None:
+            raise RuntimeError("No active workbook.")
+
+        src = sheet.Range(source_range)
+        dest = sheet.Range(dest_cell)
+
+        pc = wb.PivotCaches().Create(
+            SourceType=1,  # xlDatabase
+            SourceData=src,
+        )
+        pt = pc.CreatePivotTable(
+            TableDestination=dest,
+            TableName=pivot_name,
+        )
+
+        # Configure fields if provided
+        if row_fields:
+            for field_name in row_fields:
+                try:
+                    pt.PivotFields(field_name).Orientation = 1  # xlRowField
+                except Exception:
+                    pass
+
+        if column_fields:
+            for field_name in column_fields:
+                try:
+                    pt.PivotFields(field_name).Orientation = 2  # xlColumnField
+                except Exception:
+                    pass
+
+        if data_fields:
+            for field_name in data_fields:
+                try:
+                    pt.PivotFields(field_name).Orientation = 4  # xlDataField
+                except Exception:
+                    pass
+
+        return pivot_name
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Sparklines ────────────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def add_sparkline(
+        self,
+        source_range: str,
+        dest_cell: str,
+        spark_type: str = "line",
+        sheet_name: str | None = None,
+    ) -> None:
+        """
+        Add a sparkline chart in a cell.
+
+        Args:
+            source_range: Data range for the sparkline (e.g., 'A1:A10').
+            dest_cell: Cell where the sparkline is placed.
+            spark_type: 'line', 'column', or 'winloss'.
+            sheet_name: Optional sheet name.
+        """
+        sheet = self._get_sheet(sheet_name)
+        src = sheet.Range(source_range)
+        dest = sheet.Range(dest_cell)
+
+        sg = dest.SparklineGroups.Add(
+            Type={
+                "line": 1,     # xlSparkLine
+                "column": 2,   # xlSparkColumn
+                "winloss": 3,  # xlSparkColumnStacked100
+            }.get(spark_type.lower(), 1),
+            SourceData=src.Address,
+        )
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Insert Picture / Shape ────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def insert_picture(
+        self,
+        filepath: str,
+        left: float = 100,
+        top: float = 100,
+        width: float = 200,
+        height: float = 150,
+        sheet_name: str | None = None,
+    ) -> str:
+        """
+        Insert an image into a sheet.
+
+        Args:
+            filepath: Path to the image file (.png, .jpg, etc.).
+            left, top: Position in points.
+            width, height: Size in points.
+            sheet_name: Optional sheet name.
+
+        Returns:
+            The name of the inserted shape.
+        """
+        full_path = os.path.abspath(filepath)
+        if not os.path.exists(full_path):
+            raise FileNotFoundError(f"Image not found: {full_path}")
+        sheet = self._get_sheet(sheet_name)
+        pic = sheet.Shapes.AddPicture(
+            Filename=full_path,
+            LinkToFile=False,
+            SaveWithDocument=True,
+            Left=left,
+            Top=top,
+            Width=width,
+            Height=height,
+        )
+        return pic.Name
+
+    def insert_shape(
+        self,
+        shape_type: str = "rectangle",
+        left: float = 100,
+        top: float = 100,
+        width: float = 200,
+        height: float = 100,
+        sheet_name: str | None = None,
+    ) -> str:
+        """
+        Insert a drawing shape into a sheet.
+
+        Args:
+            shape_type: 'rectangle', 'oval', 'line', 'arrow', 'textbox'.
+            left, top: Position in points.
+            width, height: Size in points.
+            sheet_name: Optional sheet name.
+
+        Returns:
+            The name of the inserted shape.
+        """
+        sheet = self._get_sheet(sheet_name)
+
+        mso_types = {
+            "rectangle": 1,    # msoShapeRectangle
+            "oval": 9,         # msoShapeOval
+            "line": 13,        # msoShapeLine
+            "arrow": 34,       # msoShapeRightArrow
+            "textbox": 17,     # msoShapeTextBox
+        }
+        mso_type = mso_types.get(shape_type.lower(), 1)
+        shape = sheet.Shapes.AddShape(
+            Type=mso_type,
+            Left=left,
+            Top=top,
+            Width=width,
+            Height=height,
+        )
+        return shape.Name
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ── Gridlines ─────────────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════════════════
+
+    def toggle_gridlines(
+        self,
+        visible: bool = True,
+        sheet_name: str | None = None,
+    ) -> None:
+        """
+        Show or hide gridlines on a sheet.
+
+        Args:
+            visible: True to show gridlines, False to hide.
+            sheet_name: Optional sheet name.
+        """
+        sheet = self._get_sheet(sheet_name)
+        self.app.ActiveWindow.DisplayGridlines = visible
+
     # ── Helper Methods ───────────────────────────────────────────────
 
     def _get_sheet(self, sheet_name: str | None = None) -> Any:
