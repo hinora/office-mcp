@@ -57,6 +57,10 @@ def build() -> None:
         "win32process",
         "win32timezone",
         "pywintypes",
+        # Project modules (needed for PyInstaller frozen exe)
+        "wps_mcp",
+        "wps_mcp.wps_client",
+        "wps_mcp.tools",
     ]
 
     # Collections (huge stdlib parts we don't need — exclude them)

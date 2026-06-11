@@ -29,7 +29,11 @@ from mcp.types import (
     CallToolResult,
 )
 
-from .wps_client import WPSExcelClient
+try:
+    from .wps_client import WPSExcelClient
+except ImportError:
+    # PyInstaller standalone: wps_client is bundled as wps_mcp.wps_client
+    from wps_mcp.wps_client import WPSExcelClient
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
