@@ -40,11 +40,14 @@ class WPSExcelClient:
         """Connect to a running WPS Excel instance or create a new one."""
         pythoncom.CoInitialize()
 
+        existing_instance = False
+
         # Try connecting with each ProgID, preferring ET.Application
         for prog_id in self._PROG_IDS:
             # First try getting an already running instance
             try:
                 self._app = win32com.client.GetActiveObject(prog_id)
+                existing_instance = True
             except Exception:
                 pass
 
@@ -62,6 +65,7 @@ class WPSExcelClient:
                     break  # Connection verified
                 except Exception:
                     self._app = None
+                    existing_instance = False
                     continue
 
         if self._app is None:
@@ -70,7 +74,10 @@ class WPSExcelClient:
                 "Please ensure WPS Office is installed."
             )
 
-        self._app.Visible = self._visible
+        # Only force visibility on new instances. For existing instances,
+        # preserve whatever visibility the user already has set.
+        if not existing_instance:
+            self._app.Visible = self._visible
 
     @property
     def app(self) -> Any:

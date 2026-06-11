@@ -56,7 +56,7 @@ def _init_sta() -> None:
         pythoncom.CoInitialize()
         _sta_initialized = True
     if _client is None:
-        _client = WPSExcelClient(visible=False)
+        _client = WPSExcelClient(visible=True)
 
 
 def get_client() -> WPSExcelClient:
