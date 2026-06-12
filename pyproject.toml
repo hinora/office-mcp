@@ -13,7 +13,7 @@ dependencies = [
 build-exe = ["pyinstaller>=6.0"]
 
 [project.scripts]
-wps-excel-mcp = "wps_mcp.server:main"
+wps-excel-mcp = "wps_excel_mcp.server:main"
 outlook-mcp = "outlook_mcp.server:main"
 
 [build-system]

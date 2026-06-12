@@ -92,7 +92,7 @@ Add to your `.vscode/mcp.json`:
   "servers": {
     "wps-excel-mcp": {
       "command": "python",
-      "args": ["-m", "wps_mcp.server"],
+      "args": ["-m", "wps_excel_mcp.server"],
       "cwd": "d:/work/wps-mcp/src"
     },
     "outlook-mcp": {
@@ -216,7 +216,7 @@ wps-mcp/
 ├── build_exe.py                # Build standalone .exe files
 ├── build_exe.bat               # Build script wrapper
 └── src/
-    ├── wps_mcp/                # WPS Excel MCP Server
+    ├── wps_excel_mcp/          # WPS Excel MCP Server
     │   ├── __init__.py
     │   ├── server.py           # MCP server with tool definitions & handlers
     │   ├── wps_client.py       # WPS Excel COM client

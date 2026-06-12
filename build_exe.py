@@ -21,7 +21,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent
 DIST_DIR = PROJECT_ROOT / "dist"
 BUILD_DIR = PROJECT_ROOT / "build"
-SPEC_FILE = PROJECT_ROOT / "wps_mcp.spec"
+SPEC_FILE = PROJECT_ROOT / "wps_excel_mcp.spec"
 EXE_NAME = "wps-excel-mcp.exe"
 OUTLOOK_EXE_NAME = "outlook-mcp.exe"
 
@@ -114,11 +114,11 @@ def _build_one(target: str) -> None:
     """Build a single MCP exe."""
     if target == "wps":
         exe_name = EXE_NAME
-        server_path = PROJECT_ROOT / "src" / "wps_mcp" / "server.py"
+        server_path = PROJECT_ROOT / "src" / "wps_excel_mcp" / "server.py"
         project_hidden = [
-            "wps_mcp",
-            "wps_mcp.wps_client",
-            "wps_mcp.tools",
+            "wps_excel_mcp",
+            "wps_excel_mcp.wps_client",
+            "wps_excel_mcp.tools",
         ]
     elif target == "outlook":
         exe_name = OUTLOOK_EXE_NAME

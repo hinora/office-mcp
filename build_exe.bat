@@ -29,7 +29,7 @@ if %ERRORLEVEL% neq 0 (
 REM Clean previous builds
 if exist "build\" rmdir /s /q "build"
 if exist "dist\"  rmdir /s /q "dist"
-if exist "wps_mcp.spec" del /q "wps_mcp.spec"
+if exist "wps_excel_mcp.spec" del /q "wps_excel_mcp.spec"
 
 REM Install/upgrade dependencies
 echo [1/3] Installing dependencies...

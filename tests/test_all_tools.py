@@ -8,7 +8,7 @@ import os, struct, sys, tempfile, zlib
 from typing import Any
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-from wps_mcp.wps_client import WPSExcelClient
+from wps_excel_mcp.wps_client import WPSExcelClient
 
 _results: list[dict[str, Any]] = []
 _passed = _failed = _skipped = 0
@@ -66,7 +66,7 @@ def has(sub, container, msg=""):
 # ═══════════════════════════════════════════════════════════════════
 def run_all_tests():
     global _test_dir, _sheet
-    _test_dir = tempfile.mkdtemp(prefix="wps_mcp_test_")
+    _test_dir = tempfile.mkdtemp(prefix="wps_excel_mcp_test_")
     print(f"Test dir: {_test_dir}")
 
     c = get_client()
