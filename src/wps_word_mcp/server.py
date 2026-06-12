@@ -1296,14 +1296,24 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         client = get_client()
 
         loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(
-            _sta_executor,
-            _execute_tool,
-            name,
-            arguments,
-            client,
+        result = await asyncio.wait_for(
+            loop.run_in_executor(
+                _sta_executor,
+                _execute_tool,
+                name,
+                arguments,
+                client,
+            ),
+            timeout=60.0,
         )
         return [TextContent(type="text", text=result)]
+
+    except asyncio.TimeoutError:
+        logger.error(f"Tool '{name}' timed out after 60 seconds")
+        return [TextContent(type="text", text=json.dumps({
+            "error": f"Tool '{name}' timed out after 60 seconds",
+            "tool": name,
+        }, ensure_ascii=False))]
 
     except Exception as e:
         logger.exception(f"Error executing tool '{name}'")
