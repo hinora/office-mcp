@@ -1,14 +1,16 @@
 """
-Build standalone Windows .exe for WPS Excel MCP and Outlook MCP using PyInstaller.
+Build standalone Windows .exe for WPS Excel MCP, WPS Word MCP, and Outlook MCP using PyInstaller.
 
 Usage:
-    python build_exe.py             # Build both exes (dist/wps-excel-mcp.exe & outlook-mcp.exe)
+    python build_exe.py             # Build all exes
     python build_exe.py --wps       # Build only wps-excel-mcp.exe
+    python build_exe.py --word      # Build only wps-word-mcp.exe
     python build_exe.py --outlook   # Build only outlook-mcp.exe
     python build_exe.py --clean     # Clean build (remove build/ and dist/ first)
 
 Output:
     dist/wps-excel-mcp.exe  — Standalone WPS Excel MCP server
+    dist/wps-word-mcp.exe   — Standalone WPS Word MCP server
     dist/outlook-mcp.exe    — Standalone Outlook MCP server
 """
 
@@ -23,6 +25,7 @@ DIST_DIR = PROJECT_ROOT / "dist"
 BUILD_DIR = PROJECT_ROOT / "build"
 SPEC_FILE = PROJECT_ROOT / "wps_excel_mcp.spec"
 EXE_NAME = "wps-excel-mcp.exe"
+WORD_EXE_NAME = "wps-word-mcp.exe"
 OUTLOOK_EXE_NAME = "outlook-mcp.exe"
 
 # Common hidden imports required by pywin32 / COM
@@ -83,17 +86,18 @@ def ensure_pyinstaller() -> None:
         )
 
 
-def build(target: str = "wps") -> None:
+def build(target: str = "all") -> None:
     """Run PyInstaller to build the standalone exe.
 
     Args:
-        target: 'wps' for wps-excel-mcp, 'outlook' for outlook-mcp, 'all' for both.
+        target: 'wps' for wps-excel-mcp, 'word' for wps-word-mcp,
+                'outlook' for outlook-mcp, 'all' for all three.
     """
     ensure_pyinstaller()
 
     targets_to_build = []
     if target == "all":
-        targets_to_build = ["wps", "outlook"]
+        targets_to_build = ["wps", "word", "outlook"]
     else:
         targets_to_build = [target]
 
@@ -103,9 +107,9 @@ def build(target: str = "wps") -> None:
     # List all built exes
     print()
     for t in targets_to_build:
-        exe_name = EXE_NAME if t == "wps" else OUTLOOK_EXE_NAME
-        exe_path = DIST_DIR / exe_name.replace(".exe", f".exe")
-        if (DIST_DIR / exe_name).exists():
+        exe_map = {"wps": EXE_NAME, "word": WORD_EXE_NAME, "outlook": OUTLOOK_EXE_NAME}
+        exe_name = exe_map.get(t, "")
+        if exe_name and (DIST_DIR / exe_name).exists():
             size_mb = (DIST_DIR / exe_name).stat().st_size / (1024 * 1024)
             print(f"✅  {exe_name} ({size_mb:.1f} MB)")
 
@@ -119,6 +123,14 @@ def _build_one(target: str) -> None:
             "wps_excel_mcp",
             "wps_excel_mcp.wps_client",
             "wps_excel_mcp.tools",
+        ]
+    elif target == "word":
+        exe_name = WORD_EXE_NAME
+        server_path = PROJECT_ROOT / "src" / "wps_word_mcp" / "server.py"
+        project_hidden = [
+            "wps_word_mcp",
+            "wps_word_mcp.word_client",
+            "wps_word_mcp.tools",
         ]
     elif target == "outlook":
         exe_name = OUTLOOK_EXE_NAME
@@ -176,6 +188,8 @@ def main() -> None:
             do_clean = True
         elif arg in ("--wps", "--wps-excel"):
             target = "wps"
+        elif arg in ("--word", "--wps-word"):
+            target = "word"
         elif arg in ("--outlook",):
             target = "outlook"
         elif arg in ("--all",):

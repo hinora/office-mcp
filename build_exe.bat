@@ -4,12 +4,13 @@ REM  Build standalone MCP .exe files for Windows
 REM  ============================================================
 REM  This script creates:
 REM    dist\wps-excel-mcp.exe — WPS Excel MCP server
+REM    dist\wps-word-mcp.exe  — WPS Word MCP server
 REM    dist\outlook-mcp.exe   — Outlook MCP server
 REM
 REM  Requirements: Python 3.10+ must be installed on the BUILD
 REM  machine (but NOT on the target/user machine).
 REM
-REM  Usage: build_exe.bat [--wps|--outlook|--all]
+REM  Usage: build_exe.bat [--wps|--word|--outlook|--all]
 REM ============================================================
 
 echo.
@@ -56,6 +57,18 @@ if exist "dist\wps-excel-mcp.exe" (
     echo   }
     echo.
 )
+if exist "dist\wps-word-mcp.exe" (
+    echo ✅  dist\wps-word-mcp.exe is ready.
+    echo.
+    echo To use the WPS Word MCP server, add this to your MCP client config:
+    echo.
+    echo   {
+    echo     "wps-word-mcp": {
+    echo       "command": "D:\\work\\wps-mcp\\dist\\wps-word-mcp.exe"
+    echo     }
+    echo   }
+    echo.
+)
 if exist "dist\outlook-mcp.exe" (
     echo ✅  dist\outlook-mcp.exe is ready.
     echo.
@@ -68,7 +81,7 @@ if exist "dist\outlook-mcp.exe" (
     echo   }
     echo.
 )
-if not exist "dist\wps-excel-mcp.exe" if not exist "dist\outlook-mcp.exe" (
+if not exist "dist\wps-excel-mcp.exe" if not exist "dist\wps-word-mcp.exe" if not exist "dist\outlook-mcp.exe" (
     echo ❌  Build failed. Check errors above.
 )
 pause

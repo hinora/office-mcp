@@ -7,6 +7,7 @@ This project provides [Model Context Protocol (MCP)](https://modelcontextprotoco
 | Server | Description |
 |---|---|
 | **wps-excel-mcp** | Automate WPS Office Excel (create, read, format workbooks, charts, etc.) |
+| **wps-word-mcp** | Automate WPS Office Word (create, edit, format documents, tables, etc.) |
 | **outlook-mcp** | Automate Microsoft Outlook (email, calendar, contacts) |
 
 ---
@@ -18,7 +19,7 @@ This project provides [Model Context Protocol (MCP)](https://modelcontextprotoco
 - Required Python packages:
   - `mcp` — MCP Python SDK
   - `pywin32` — Windows COM automation
-- **WPS Office** installed (for wps-excel-mcp)
+- **WPS Office** installed (for wps-excel-mcp, wps-word-mcp)
 - **Microsoft Outlook** installed (for outlook-mcp)
 
 ## Installation
@@ -46,6 +47,7 @@ build_exe.bat
 
 # Or build individually:
 build_exe.bat --wps
+build_exe.bat --word
 build_exe.bat --outlook
 ```
 
@@ -53,13 +55,15 @@ Or manually:
 
 ```bash
 pip install pyinstaller
-python build_exe.py            # Build both
+python build_exe.py            # Build all
 python build_exe.py --wps      # WPS Excel MCP only
+python build_exe.py --word     # WPS Word MCP only
 python build_exe.py --outlook  # Outlook MCP only
 ```
 
 Output:
 - `dist\wps-excel-mcp.exe`
+- `dist\wps-word-mcp.exe`
 - `dist\outlook-mcp.exe`
 
 ### Using the EXEs
@@ -71,6 +75,9 @@ Add them to your MCP client config:
   "mcpServers": {
     "wps-excel-mcp": {
       "command": "C:\\path\\to\\wps-excel-mcp.exe"
+    },
+    "wps-word-mcp": {
+      "command": "C:\\path\\to\\wps-word-mcp.exe"
     },
     "outlook-mcp": {
       "command": "C:\\path\\to\\outlook-mcp.exe"
