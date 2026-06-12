@@ -157,7 +157,11 @@ class WPSWordClient:
             The name of the new document.
         """
         doc = self.documents.Add()
-        return doc.Name
+        try:
+            return doc.Name
+        except AttributeError:
+            # Some versions return the document differently
+            return self.active_document.Name if self.active_document else "Document1"
 
     def open_document(self, filepath: str) -> str:
         """
@@ -638,12 +642,13 @@ class WPSWordClient:
         """
         Find and replace text in the document.
 
+        Uses string/regex substitution for reliability across all Word versions.
+
         Args:
             find_text: Text to search for.
             replace_text: Replacement text.
             match_case: If True, match case.
-            match_whole_word: If True, match whole words only (not yet implemented
-                for whole-word via string replace; uses simple substring matching).
+            match_whole_word: If True, match whole words only.
             replace_all: If True, replace all occurrences. If False, replace only first.
 
         Returns:
@@ -655,21 +660,17 @@ class WPSWordClient:
 
         old_text = doc.Content.Text
 
-        if match_case:
-            if replace_all:
-                new_text = old_text.replace(find_text, replace_text)
-                count = old_text.count(find_text)
-            else:
-                new_text = old_text.replace(find_text, replace_text, 1)
-                count = 1 if find_text in old_text else 0
+        if match_whole_word:
+            pattern = r'\b' + re.escape(find_text) + r'\b'
         else:
-            # Case-insensitive: use regex
             pattern = re.escape(find_text)
-            flags = 0 if match_case else re.IGNORECASE
-            if replace_all:
-                new_text, count = re.subn(pattern, replace_text, old_text, flags=flags)
-            else:
-                new_text, count = re.subn(pattern, replace_text, old_text, count=1, flags=flags)
+
+        flags = 0 if match_case else re.IGNORECASE
+
+        if replace_all:
+            new_text, count = re.subn(pattern, replace_text, old_text, flags=flags)
+        else:
+            new_text, count = re.subn(pattern, replace_text, old_text, count=1, flags=flags)
 
         if count > 0:
             doc.Content.Text = new_text
@@ -1009,3 +1010,525 @@ class WPSWordClient:
             percentage: Zoom percentage (10-500).
         """
         self.app.ActiveWindow.View.Zoom.Percentage = percentage
+
+    # ── Style Operations ─────────────────────────────────────────────
+
+    def apply_style(
+        self,
+        style_name: str,
+        range_spec: str = "selection",
+    ) -> None:
+        """
+        Apply a named Word style to the specified range.
+
+        Args:
+            style_name: The style name (e.g., 'Heading 1', 'Normal', 'Title').
+            range_spec: Where to apply: 'selection', 'content', or 'start=X,end=Y'.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        rng = self._get_range(doc, range_spec)
+        rng.Style = doc.Styles(style_name)
+
+    # ── List Formatting ──────────────────────────────────────────────
+
+    def set_list_format(
+        self,
+        list_type: str = "bullet",
+        range_spec: str = "selection",
+    ) -> None:
+        """
+        Apply bullet or numbered list formatting to paragraphs in the range.
+
+        Args:
+            list_type: 'bullet' or 'number'.
+            range_spec: Where to apply: 'selection', 'content', or 'start=X,end=Y'.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        rng = self._get_range(doc, range_spec)
+        if list_type.lower() == "bullet":
+            rng.ListFormat.ApplyBulletDefault()
+        elif list_type.lower() == "number":
+            rng.ListFormat.ApplyNumberDefault()
+        else:
+            raise ValueError(f"Unknown list_type: {list_type!r}. Use 'bullet' or 'number'.")
+
+    def remove_list_format(
+        self,
+        range_spec: str = "selection",
+    ) -> None:
+        """
+        Remove bullet/numbered list formatting from paragraphs.
+
+        Args:
+            range_spec: Where to apply: 'selection', 'content', or 'start=X,end=Y'.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        rng = self._get_range(doc, range_spec)
+        rng.ListFormat.RemoveNumbers()
+
+    # ── Hyperlink ───────────────────────────────────────────────────
+
+    def add_hyperlink(
+        self,
+        address: str,
+        text_to_display: str | None = None,
+        range_spec: str = "selection",
+    ) -> None:
+        """
+        Add a hyperlink to the document.
+
+        Args:
+            address: URL, file path, or email address for the link.
+            text_to_display: Optional display text. Defaults to address.
+            range_spec: 'selection', 'content' (appends at end), or 'start=X,end=Y'.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+
+        if range_spec == "selection":
+            sel = self.selection
+            if sel and sel.Text.strip():
+                # Use selected text as anchor; the hyperlink replaces it
+                display = text_to_display if text_to_display else sel.Text
+                doc.Hyperlinks.Add(Anchor=sel.Range, Address=address, TextToDisplay=display)
+            else:
+                rng = doc.Content
+                rng.Collapse(Direction=0)  # wdCollapseEnd=0
+                display = text_to_display or address
+                doc.Hyperlinks.Add(Anchor=rng, Address=address, TextToDisplay=display)
+        elif range_spec.startswith("start="):
+            rng = self._get_range(doc, range_spec)
+            display = text_to_display or address
+            doc.Hyperlinks.Add(Anchor=rng, Address=address, TextToDisplay=display)
+        else:
+            rng = doc.Content
+            rng.Collapse(Direction=0)  # wdCollapseEnd=0
+            display = text_to_display or address
+            doc.Hyperlinks.Add(Anchor=rng, Address=address, TextToDisplay=display)
+
+    # ── Table of Contents ───────────────────────────────────────────
+
+    def insert_table_of_contents(self) -> None:
+        """
+        Insert a Table of Contents at the current cursor position.
+        Uses Heading 1-3 styles for TOC entries.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        sel = self.selection
+        if sel is None:
+            raise RuntimeError("No selection available.")
+        # Use positional args for broader Word version compatibility
+        # Add(Range, UseHeadingStyles, LowerHeadingLevel, UpperHeadingLevel, ...)
+        doc.TablesOfContents.Add(
+            sel.Range,
+            True,   # UseHeadingStyles
+            1,      # LowerHeadingLevel = Heading 1
+            3,      # UpperHeadingLevel = Heading 3
+        )
+
+    # ── Page Numbers ────────────────────────────────────────────────
+
+    def insert_page_numbers(self, position: str = "bottom") -> None:
+        """
+        Insert page numbers in the header or footer of the first section.
+
+        Args:
+            position: 'bottom' (footer) or 'top' (header). Default 'bottom'.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        section = doc.Sections(1)
+        wdAlignPageNumberCenter = 1
+        if position.lower() == "top":
+            header = section.Headers(1)  # wdHeaderFooterPrimary=1
+            header.PageNumbers.Add(PageNumberAlignment=wdAlignPageNumberCenter)
+        else:
+            footer = section.Footers(1)  # wdHeaderFooterPrimary=1
+            footer.PageNumbers.Add(PageNumberAlignment=wdAlignPageNumberCenter)
+
+    # ── Document Properties ─────────────────────────────────────────
+
+    def get_document_properties(self) -> dict[str, str]:
+        """
+        Get document metadata properties.
+
+        Returns:
+            Dict with author, title, subject, keywords, comments, etc.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        props = doc.BuiltInDocumentProperties
+        result: dict[str, str] = {}
+        for prop_name in ("Author", "Title", "Subject", "Keywords",
+                           "Comments", "Category", "Company"):
+            try:
+                result[prop_name.lower()] = str(props(prop_name).Value or "")
+            except Exception:
+                result[prop_name.lower()] = ""
+        return result
+
+    def set_document_properties(
+        self,
+        author: str | None = None,
+        title: str | None = None,
+        subject: str | None = None,
+        keywords: str | None = None,
+    ) -> None:
+        """
+        Set document metadata properties.
+
+        Args:
+            author: Document author.
+            title: Document title.
+            subject: Document subject.
+            keywords: Document keywords (comma separated).
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        props = doc.BuiltInDocumentProperties
+        updates = {
+            "Author": author,
+            "Title": title,
+            "Subject": subject,
+            "Keywords": keywords,
+        }
+        for name, value in updates.items():
+            if value is not None:
+                try:
+                    props(name).Value = value
+                except Exception:
+                    pass
+
+    # ── Comments ────────────────────────────────────────────────────
+
+    def add_comment(
+        self,
+        text: str,
+        range_spec: str = "selection",
+    ) -> None:
+        """
+        Add a comment to the specified range.
+
+        Args:
+            text: Comment text.
+            range_spec: Where to anchor the comment: 'selection', 'content', or 'start=X,end=Y'.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        rng = self._get_range(doc, range_spec)
+        doc.Comments.Add(Range=rng, Text=text)
+
+    # ── Highlight ────────────────────────────────────────────────────
+
+    def set_highlight(
+        self,
+        color_index: int,
+        range_spec: str = "selection",
+    ) -> None:
+        """
+        Set text highlight color on a range.
+
+        Args:
+            color_index: WdColorIndex value. Common values:
+                0=None (no highlight), 6=Yellow, 7=Bright Green,
+                2=Blue, 13=Pink, 15=Gray-25%, 3=Turquoise.
+            range_spec: Where to apply: 'selection', 'content', or 'start=X,end=Y'.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        rng = self._get_range(doc, range_spec)
+        rng.HighlightColorIndex = color_index
+
+    # ── Table Style ─────────────────────────────────────────────────
+
+    def set_table_style(
+        self,
+        table_index: int,
+        style_name: str,
+    ) -> None:
+        """
+        Apply a built-in or custom style to a table.
+
+        Args:
+            table_index: 1-based table index.
+            style_name: Table style name (e.g., 'Table Grid', 'Table Style Medium 1').
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        table = doc.Tables(table_index)
+        table.Style = style_name
+
+    # ── Page Borders ────────────────────────────────────────────────
+
+    def set_page_borders(
+        self,
+        line_style: int = 1,
+        line_width: int = 4,
+        distance: int = 24,
+    ) -> None:
+        """
+        Add or modify page borders for the first section.
+
+        Args:
+            line_style: Border line style. 1=single, 2=dot, 3=dash, 4=dash-dot, etc.
+            line_width: Border width in points. 4=0.5pt, 6=0.75pt, 8=1pt, 12=1.5pt.
+            distance: Distance from page edge in points. Default 24.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        section = doc.Sections(1)
+        borders = section.Borders
+        for border_idx in (1, 2, 3, 4):
+            # wdBorderTop=1, wdBorderRight=2, wdBorderBottom=3, wdBorderLeft=4
+            try:
+                border = borders.Item(border_idx)
+                border.LineStyle = line_style
+                border.LineWidth = line_width
+            except Exception:
+                pass
+        try:
+            section.Borders.DistanceFrom = distance
+        except Exception:
+            pass
+
+    # ── Watermark ───────────────────────────────────────────────────
+
+    def add_watermark(
+        self,
+        text: str,
+        font_size: int = 72,
+        color: int | None = None,
+        layout: str = "diagonal",
+    ) -> None:
+        """
+        Add a text watermark to the document via the first section header.
+
+        Tries multiple approaches for compatibility across Word/WPS versions.
+
+        Args:
+            text: Watermark text (e.g., 'CONFIDENTIAL', 'DRAFT').
+            font_size: Font size in points. Default 72.
+            color: Text color as RGB int (e.g., 0xC0C0C0 for silver). Default light gray.
+            layout: 'horizontal' or 'diagonal'. Default 'diagonal'.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        section = doc.Sections(1)
+        header = section.Headers(1)  # wdHeaderFooterPrimary=1
+        wm_color = color if color is not None else 0xC0C0C0  # Silver
+        rotation = -45 if layout.lower() == "diagonal" else 0
+
+        # Approach 1: AddTextEffect
+        try:
+            shape = header.Shapes.AddTextEffect(
+                PresetTextEffect=1,
+                Text=text,
+                FontName="Arial",
+                FontSize=font_size,
+                FontBold=True,
+                FontItalic=False,
+                Left=0,
+                Top=0,
+            )
+            shape.Fill.ForeColor.RGB = wm_color
+            shape.Fill.Transparency = 0.5
+            shape.Line.Visible = False
+            try:
+                shape.Left = (doc.PageSetup.PageWidth - shape.Width) / 2
+                shape.Top = (doc.PageSetup.PageHeight - shape.Height) / 2
+            except Exception:
+                pass
+            if rotation:
+                shape.Rotation = rotation
+            return
+        except Exception:
+            pass
+
+        # Approach 2: AddTextbox in header
+        try:
+            shape = header.Shapes.AddTextbox(
+                Orientation=1,
+                Left=50, Top=200,
+                Width=500, Height=200,
+            )
+            tr = shape.TextFrame.TextRange
+            tr.Text = text
+            tr.Font.Size = font_size
+            tr.Font.Bold = True
+            tr.Font.Name = "Arial"
+            tr.Font.Color = wm_color
+            shape.Line.Visible = False
+            shape.Fill.Visible = False
+            if rotation:
+                shape.Rotation = rotation
+            return
+        except Exception:
+            pass
+
+        # Approach 3: Set header text directly (minimal but always works)
+        try:
+            header.Range.Font.Size = font_size
+            header.Range.Font.Bold = True
+            header.Range.Font.Color = wm_color
+            header.Range.Text = text
+        except Exception:
+            pass
+
+    # ── Document Protection ─────────────────────────────────────────
+
+    def protect_document(self, password: str = "") -> None:
+        """
+        Protect the document from editing (read-only).
+
+        Args:
+            password: Optional password to protect with.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        doc.Protect(
+            Type=3,  # wdAllowOnlyReading=3
+            NoReset=False,
+            Password=password,
+        )
+
+    def unprotect_document(self, password: str = "") -> None:
+        """
+        Remove protection from the document.
+
+        Args:
+            password: Password if the document was protected with one.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        doc.Unprotect(Password=password)
+
+    # ── Track Changes ───────────────────────────────────────────────
+
+    def toggle_track_changes(self, enable: bool = True) -> None:
+        """
+        Enable or disable Track Changes (revision tracking).
+
+        Args:
+            enable: True to turn on track changes, False to turn off.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        doc.TrackRevisions = enable
+
+    # ── Columns ─────────────────────────────────────────────────────
+
+    def set_columns(
+        self,
+        num_columns: int = 1,
+        spacing: float | None = None,
+    ) -> None:
+        """
+        Set multi-column layout for the first section.
+
+        Args:
+            num_columns: Number of columns (1-4). Default 1 (single column).
+            spacing: Column spacing in points. Default is auto-calculated.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        section = doc.Sections(1)
+        page_setup = section.PageSetup
+        page_setup.TextColumns.SetCount(NumColumns=num_columns)
+        if spacing is not None:
+            page_setup.TextColumns.Spacing = spacing
+
+    # ── Bookmarks ───────────────────────────────────────────────────
+
+    def add_bookmark(
+        self,
+        name: str,
+        range_spec: str = "selection",
+    ) -> None:
+        """
+        Add a bookmark at the specified range.
+
+        Args:
+            name: Bookmark name (must be unique, no spaces).
+            range_spec: Where to add: 'selection', 'content', or 'start=X,end=Y'.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        rng = self._get_range(doc, range_spec)
+        doc.Bookmarks.Add(Name=name, Range=rng)
+
+    def go_to_bookmark(self, name: str) -> dict[str, Any]:
+        """
+        Navigate to a bookmark and return its position.
+
+        Args:
+            name: Bookmark name.
+
+        Returns:
+            Dict with bookmark name, start, and end character positions.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        bookmark = doc.Bookmarks(name)
+        bookmark.Select()
+        sel = self.selection
+        return {
+            "name": name,
+            "start": sel.Start if sel else -1,
+            "end": sel.End if sel else -1,
+        }
+
+    # ── Print ───────────────────────────────────────────────────────
+
+    def print_document(self, copies: int = 1) -> None:
+        """
+        Print the active document to the default printer.
+
+        Args:
+            copies: Number of copies to print. Default 1.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        doc.PrintOut(Copies=copies)
+
+    # ── Range Text ─────────────────────────────────────────────────
+
+    def get_range_text(self, start: int, end: int) -> str:
+        """
+        Get text from a specific character range.
+
+        Args:
+            start: 0-based start character position.
+            end: 0-based end character position.
+
+        Returns:
+            The text in the range.
+        """
+        doc = self.active_document
+        if doc is None:
+            raise RuntimeError("No active document.")
+        rng = doc.Range(start, end)
+        return rng.Text

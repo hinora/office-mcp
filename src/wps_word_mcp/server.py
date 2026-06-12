@@ -867,6 +867,417 @@ TOOLS = [
             "required": ["percentage"],
         },
     ),
+
+    # ── Style Operations ──
+    Tool(
+        name="word_apply_style",
+        description="Apply a named Word style (e.g., 'Heading 1', 'Normal', 'Title', 'Subtitle') to the specified range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "style_name": {
+                    "type": "string",
+                    "description": "The style name (e.g., 'Heading 1', 'Normal', 'Title', 'Subtitle').",
+                },
+                "range_spec": {
+                    "type": "string",
+                    "description": "Where to apply: 'selection' (default), 'content' (entire document), or 'start=X,end=Y'.",
+                    "default": "selection",
+                },
+            },
+            "required": ["style_name"],
+        },
+    ),
+
+    # ── List Formatting ──
+    Tool(
+        name="word_set_list_format",
+        description="Apply bullet or numbered list formatting to paragraphs in the range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "list_type": {
+                    "type": "string",
+                    "description": "Type of list: 'bullet' or 'number'.",
+                    "enum": ["bullet", "number"],
+                },
+                "range_spec": {
+                    "type": "string",
+                    "description": "Where to apply: 'selection' (default), 'content', or 'start=X,end=Y'.",
+                    "default": "selection",
+                },
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="word_remove_list_format",
+        description="Remove bullet/numbered list formatting from paragraphs.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "range_spec": {
+                    "type": "string",
+                    "description": "Where to apply: 'selection' (default), 'content', or 'start=X,end=Y'.",
+                    "default": "selection",
+                },
+            },
+            "required": [],
+        },
+    ),
+
+    # ── Hyperlink ──
+    Tool(
+        name="word_add_hyperlink",
+        description="Add a hyperlink to the document (URL, file link, email).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "description": "URL, file path, or email address for the link.",
+                },
+                "text_to_display": {
+                    "type": "string",
+                    "description": "Optional display text. Defaults to the address if not provided.",
+                },
+                "range_spec": {
+                    "type": "string",
+                    "description": "Where to add: 'selection' (default), 'content' (appends at end), or 'start=X,end=Y'.",
+                    "default": "selection",
+                },
+            },
+            "required": ["address"],
+        },
+    ),
+
+    # ── Table of Contents ──
+    Tool(
+        name="word_insert_table_of_contents",
+        description="Insert a Table of Contents at the current cursor position. Uses Heading 1-3 styles for entries.",
+        inputSchema={
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    ),
+
+    # ── Page Numbers ──
+    Tool(
+        name="word_insert_page_numbers",
+        description="Insert page numbers in the header or footer of the first section.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "position": {
+                    "type": "string",
+                    "description": "Where to place: 'bottom' (footer, default) or 'top' (header).",
+                    "enum": ["bottom", "top"],
+                    "default": "bottom",
+                },
+            },
+            "required": [],
+        },
+    ),
+
+    # ── Document Properties ──
+    Tool(
+        name="word_get_document_properties",
+        description="Get document metadata (author, title, subject, keywords, comments, etc.).",
+        inputSchema={
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    ),
+    Tool(
+        name="word_set_document_properties",
+        description="Set document metadata (author, title, subject, keywords).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string",
+                    "description": "Document author.",
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Document title.",
+                },
+                "subject": {
+                    "type": "string",
+                    "description": "Document subject.",
+                },
+                "keywords": {
+                    "type": "string",
+                    "description": "Document keywords (comma separated).",
+                },
+            },
+            "required": [],
+        },
+    ),
+
+    # ── Comments ──
+    Tool(
+        name="word_add_comment",
+        description="Add a comment to the specified range in the document.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": "Comment text.",
+                },
+                "range_spec": {
+                    "type": "string",
+                    "description": "Where to anchor the comment: 'selection' (default), 'content', or 'start=X,end=Y'.",
+                    "default": "selection",
+                },
+            },
+            "required": ["text"],
+        },
+    ),
+
+    # ── Highlight ──
+    Tool(
+        name="word_set_highlight",
+        description="Set text highlight color on a range. Common colors: 6=Yellow, 7=Green, 2=Blue, 13=Pink, 0=None.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "color_index": {
+                    "type": "integer",
+                    "description": "Highlight color index: 0=None, 6=Yellow, 7=Bright Green, 2=Blue, 13=Pink, 15=Gray.",
+                },
+                "range_spec": {
+                    "type": "string",
+                    "description": "Where to apply: 'selection' (default), 'content', or 'start=X,end=Y'.",
+                    "default": "selection",
+                },
+            },
+            "required": ["color_index"],
+        },
+    ),
+
+    # ── Table Style ──
+    Tool(
+        name="word_set_table_style",
+        description="Apply a built-in style to a table (e.g., 'Table Grid', 'Table Style Medium 1').",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "table_index": {
+                    "type": "integer",
+                    "description": "1-based table index.",
+                },
+                "style_name": {
+                    "type": "string",
+                    "description": "Table style name (e.g., 'Table Grid', 'Table Style Medium 1', 'Table Style Light 1').",
+                },
+            },
+            "required": ["table_index", "style_name"],
+        },
+    ),
+
+    # ── Page Borders ──
+    Tool(
+        name="word_set_page_borders",
+        description="Add or modify page borders for the document. Use line_style 1 for single, 2 for dotted, 3 for dashed.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "line_style": {
+                    "type": "integer",
+                    "description": "Border line style: 1=single, 2=dot, 3=dash, 4=dash-dot. Default 1.",
+                    "default": 1,
+                },
+                "line_width": {
+                    "type": "integer",
+                    "description": "Border width: 4=0.5pt, 6=0.75pt, 8=1pt, 12=1.5pt. Default 4.",
+                    "default": 4,
+                },
+                "distance": {
+                    "type": "integer",
+                    "description": "Distance from page edge in points. Default 24.",
+                    "default": 24,
+                },
+            },
+            "required": [],
+        },
+    ),
+
+    # ── Watermark ──
+    Tool(
+        name="word_add_watermark",
+        description="Add a text watermark to the document (e.g., 'CONFIDENTIAL', 'DRAFT').",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": "Watermark text (e.g., 'CONFIDENTIAL', 'DRAFT').",
+                },
+                "font_size": {
+                    "type": "integer",
+                    "description": "Font size in points. Default 72.",
+                    "default": 72,
+                },
+                "color": {
+                    "type": "string",
+                    "description": "RGB hex color string (e.g., 'C0C0C0' for light gray). Default is silver.",
+                },
+                "layout": {
+                    "type": "string",
+                    "description": "Layout: 'diagonal' (default) or 'horizontal'.",
+                    "enum": ["diagonal", "horizontal"],
+                    "default": "diagonal",
+                },
+            },
+            "required": ["text"],
+        },
+    ),
+
+    # ── Document Protection ──
+    Tool(
+        name="word_protect_document",
+        description="Protect the document as read-only. Optionally set a password.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "description": "Optional password to protect with.",
+                    "default": "",
+                },
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="word_unprotect_document",
+        description="Remove protection from the document (password needed if set).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "description": "Password if the document was protected with one.",
+                    "default": "",
+                },
+            },
+            "required": [],
+        },
+    ),
+
+    # ── Track Changes ──
+    Tool(
+        name="word_toggle_track_changes",
+        description="Enable or disable Track Changes (revision tracking).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "type": "boolean",
+                    "description": "True to enable track changes, False to disable. Default: true.",
+                    "default": True,
+                },
+            },
+            "required": [],
+        },
+    ),
+
+    # ── Columns ──
+    Tool(
+        name="word_set_columns",
+        description="Set multi-column layout for the first section (newsletter-style).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "num_columns": {
+                    "type": "integer",
+                    "description": "Number of columns (1-4). 1 = single column. Default 1.",
+                    "default": 1,
+                },
+                "spacing": {
+                    "type": "number",
+                    "description": "Column spacing in points.",
+                },
+            },
+            "required": [],
+        },
+    ),
+
+    # ── Bookmarks ──
+    Tool(
+        name="word_add_bookmark",
+        description="Add a bookmark at the specified range (for navigation).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Bookmark name (must be unique, use underscores instead of spaces).",
+                },
+                "range_spec": {
+                    "type": "string",
+                    "description": "Where to add: 'selection' (default), 'content', or 'start=X,end=Y'.",
+                    "default": "selection",
+                },
+            },
+            "required": ["name"],
+        },
+    ),
+    Tool(
+        name="word_go_to_bookmark",
+        description="Navigate to a bookmark by name and return its position.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Bookmark name to navigate to.",
+                },
+            },
+            "required": ["name"],
+        },
+    ),
+
+    # ── Print ──
+    Tool(
+        name="word_print_document",
+        description="Print the active document to the default printer.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "copies": {
+                    "type": "integer",
+                    "description": "Number of copies to print. Default 1.",
+                    "default": 1,
+                },
+            },
+            "required": [],
+        },
+    ),
+
+    # ── Range Text ──
+    Tool(
+        name="word_get_range_text",
+        description="Get text from a specific 0-based character range (e.g., start=0, end=100).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "start": {
+                    "type": "integer",
+                    "description": "0-based start character position.",
+                },
+                "end": {
+                    "type": "integer",
+                    "description": "0-based end character position.",
+                },
+            },
+            "required": ["start", "end"],
+        },
+    ),
 ]
 
 
@@ -1167,6 +1578,140 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSWordClient) -> str
     elif name == "word_set_zoom":
         client.set_zoom(args["percentage"])
         result = {"message": f"Set zoom to {args['percentage']}%."}
+
+    # ── Style Operations ──
+    elif name == "word_apply_style":
+        range_spec = args.get("range_spec", "selection")
+        client.apply_style(args["style_name"], range_spec)
+        result = {"message": f"Applied style '{args['style_name']}' on '{range_spec}'."}
+
+    # ── List Formatting ──
+    elif name == "word_set_list_format":
+        list_type = args.get("list_type", "bullet")
+        range_spec = args.get("range_spec", "selection")
+        client.set_list_format(list_type, range_spec)
+        result = {"message": f"Applied {list_type} list format on '{range_spec}'."}
+
+    elif name == "word_remove_list_format":
+        range_spec = args.get("range_spec", "selection")
+        client.remove_list_format(range_spec)
+        result = {"message": f"Removed list format from '{range_spec}'."}
+
+    # ── Hyperlink ──
+    elif name == "word_add_hyperlink":
+        range_spec = args.get("range_spec", "selection")
+        client.add_hyperlink(
+            args["address"],
+            args.get("text_to_display"),
+            range_spec,
+        )
+        result = {"message": f"Added hyperlink to '{args['address']}'."}
+
+    # ── Table of Contents ──
+    elif name == "word_insert_table_of_contents":
+        client.insert_table_of_contents()
+        result = {"message": "Inserted Table of Contents."}
+
+    # ── Page Numbers ──
+    elif name == "word_insert_page_numbers":
+        client.insert_page_numbers(args.get("position", "bottom"))
+        result = {"message": f"Inserted page numbers in {args.get('position', 'bottom')}."}
+
+    # ── Document Properties ──
+    elif name == "word_get_document_properties":
+        result = client.get_document_properties()
+
+    elif name == "word_set_document_properties":
+        client.set_document_properties(
+            args.get("author"),
+            args.get("title"),
+            args.get("subject"),
+            args.get("keywords"),
+        )
+        result = {"message": "Set document properties."}
+
+    # ── Comments ──
+    elif name == "word_add_comment":
+        range_spec = args.get("range_spec", "selection")
+        client.add_comment(args["text"], range_spec)
+        result = {"message": f"Added comment on '{range_spec}'."}
+
+    # ── Highlight ──
+    elif name == "word_set_highlight":
+        range_spec = args.get("range_spec", "selection")
+        client.set_highlight(args["color_index"], range_spec)
+        result = {"message": f"Set highlight color index={args['color_index']} on '{range_spec}'."}
+
+    # ── Table Style ──
+    elif name == "word_set_table_style":
+        client.set_table_style(args["table_index"], args["style_name"])
+        result = {"message": f"Applied style '{args['style_name']}' to table {args['table_index']}."}
+
+    # ── Page Borders ──
+    elif name == "word_set_page_borders":
+        client.set_page_borders(
+            args.get("line_style", 1),
+            args.get("line_width", 4),
+            args.get("distance", 24),
+        )
+        result = {"message": "Set page borders."}
+
+    # ── Watermark ──
+    elif name == "word_add_watermark":
+        color_hex = args.get("color")
+        color_int = None
+        if color_hex:
+            color_int = int(color_hex.lstrip("#"), 16)
+        client.add_watermark(
+            args["text"],
+            args.get("font_size", 72),
+            color_int,
+            args.get("layout", "diagonal"),
+        )
+        result = {"message": f"Added watermark: '{args['text']}'."}
+
+    # ── Document Protection ──
+    elif name == "word_protect_document":
+        client.protect_document(args.get("password", ""))
+        result = {"message": "Document protected (read-only)."}
+
+    elif name == "word_unprotect_document":
+        client.unprotect_document(args.get("password", ""))
+        result = {"message": "Document unprotected."}
+
+    # ── Track Changes ──
+    elif name == "word_toggle_track_changes":
+        enable = args.get("enable", True)
+        client.toggle_track_changes(enable)
+        result = {"message": f"Track changes {'enabled' if enable else 'disabled'}."}
+
+    # ── Columns ──
+    elif name == "word_set_columns":
+        client.set_columns(
+            args.get("num_columns", 1),
+            args.get("spacing"),
+        )
+        result = {"message": f"Set columns to {args.get('num_columns', 1)}."}
+
+    # ── Bookmarks ──
+    elif name == "word_add_bookmark":
+        range_spec = args.get("range_spec", "selection")
+        client.add_bookmark(args["name"], range_spec)
+        result = {"message": f"Added bookmark '{args['name']}'."}
+
+    elif name == "word_go_to_bookmark":
+        bookmark_info = client.go_to_bookmark(args["name"])
+        result = {"message": f"Navigated to bookmark '{args['name']}'.", **bookmark_info}
+
+    # ── Print ──
+    elif name == "word_print_document":
+        client.print_document(args.get("copies", 1))
+        result = {"message": f"Printing {args.get('copies', 1)} copy/copies."}
+
+    # ── Range Text ──
+    elif name == "word_get_range_text":
+        text = client.get_range_text(args["start"], args["end"])
+        result = {"start": args["start"], "end": args["end"], "text": text}
 
     else:
         raise ValueError(f"Unknown tool: {name}")

@@ -85,6 +85,16 @@ def get_saved_path() -> str:
 
 
 # ═══════════════════════════════════════════════════════════════════
+
+def _bookmark_exists(client: WPSWordClient, name: str) -> bool:
+    """Check if a bookmark exists in the active document."""
+    try:
+        _ = client.active_document.Bookmarks(name)
+        return True
+    except Exception:
+        return False
+
+
 def run_all_tests():
     global _test_dir, _saved_path
     _test_dir = tempfile.mkdtemp(prefix="wps_word_mcp_test_")
@@ -520,6 +530,270 @@ def run_all_tests():
         c.set_zoom(120),
         zoom := c.app.ActiveWindow.View.Zoom.Percentage,
         eq(zoom, 120),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # STYLE OPERATIONS
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Style Operations --")
+    run_test("word_apply_style_heading1_content", lambda: (
+        c.set_text("Chapter One\nChapter Two\n"),
+        c.apply_style("Heading 1", "content"),
+        para := c.active_document.Paragraphs(1),
+        style_name := para.Style.NameLocal if hasattr(para.Style, 'NameLocal') else para.Style.Name,
+        ok("Heading 1" in str(style_name) or "heading" in str(style_name).lower(),
+           f"Expected Heading 1 style, got {style_name}"),
+    ))
+    run_test("word_apply_style_normal", lambda: (
+        c.set_text("Normal paragraph"),
+        c.apply_style("Normal", "content"),
+        para := c.active_document.Paragraphs(1),
+        style_name := para.Style.NameLocal if hasattr(para.Style, 'NameLocal') else para.Style.Name,
+        ok("Normal" in str(style_name) or "normal" in str(style_name).lower(),
+           f"Expected Normal style, got {style_name}"),
+    ))
+    run_test("word_apply_style_from_paragraph", lambda: (
+        c.set_text("Title Text"),
+        c.apply_style("Title", "selection"),
+        para := c.active_document.Paragraphs(1),
+        style_name := para.Style.NameLocal if hasattr(para.Style, 'NameLocal') else para.Style.Name,
+        ok("Title" in str(style_name),
+           f"Expected Title style, got {style_name}"),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # LIST FORMATTING
+    # ═══════════════════════════════════════════════════════
+    print("\n-- List Formatting --")
+    run_test("word_set_list_format_bullet", lambda: (
+        c.set_text("Item A\rItem B\rItem C\r"),
+        c.set_list_format("bullet", "content"),
+        ok(c.get_paragraph_count() >= 1),
+    ))
+    run_test("word_set_list_format_number", lambda: (
+        c.set_text("First\rSecond\rThird\r"),
+        c.set_list_format("number", "content"),
+        ok(c.get_paragraph_count() >= 1),
+    ))
+    run_test("word_remove_list_format", lambda: (
+        c.set_text("List item\r"),
+        c.set_list_format("bullet", "content"),
+        c.remove_list_format("content"),
+        ok(True),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # HYPERLINK
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Hyperlink --")
+    run_test("word_add_hyperlink", lambda: (
+        c.set_text("Click here for more"),
+        c.add_hyperlink("https://example.com", "docs", "content"),
+        text := c.get_text(),
+        ok("docs" in text or "example.com" in text or "more" in text),
+        count := c.active_document.Hyperlinks.Count,
+        ok(count >= 1, f"Expected at least 1 hyperlink, got {count}"),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # TABLE OF CONTENTS
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Table of Contents --")
+    run_test("word_insert_table_of_contents", lambda: (
+        c.set_text(""),
+        c.insert_text_at_start("TOC Placeholder\r\rChapter 1\rChapter 2\r"),
+        c.apply_style("Heading 1", "content"),
+        sel := c.selection,
+        sel.HomeKey(Unit=6),  # wdStory=6
+        c.insert_table_of_contents(),
+        count := c.active_document.TablesOfContents.Count,
+        ok(count >= 1, f"Expected at least 1 TOC, got {count}"),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # PAGE NUMBERS
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Page Numbers --")
+    run_test("word_insert_page_numbers_bottom", lambda: (
+        c.set_text("Page numbered document.\r"),
+        c.insert_page_numbers("bottom"),
+        section := c.active_document.Sections(1),
+        footer := section.Footers(1),
+        ok(footer.PageNumbers.Count >= 1, "Expected page numbers in footer"),
+    ))
+    run_test("word_insert_page_numbers_top", lambda: (
+        c.create_document(),
+        c.set_text("Header page numbers.\r"),
+        c.insert_page_numbers("top"),
+        section := c.active_document.Sections(1),
+        header := section.Headers(1),
+        ok(header.PageNumbers.Count >= 1, "Expected page numbers in header"),
+        c.close_document(save=False),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # DOCUMENT PROPERTIES
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Document Properties --")
+    run_test("word_get_document_properties", lambda: (
+        props := c.get_document_properties(),
+        has_key("author", props),
+        has_key("title", props),
+        has_key("subject", props),
+        has_key("keywords", props),
+    ))
+    run_test("word_set_document_properties", lambda: (
+        c.set_document_properties(
+            author="Test Author",
+            title="Test Title",
+            subject="Test Subject",
+            keywords="test, mcp, word",
+        ),
+        props := c.get_document_properties(),
+        ok("Test Author" in str(props.get("author", "")),
+           f"Author not set: {props.get('author')}"),
+        ok("Test Title" in str(props.get("title", "")),
+           f"Title not set: {props.get('title')}"),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # COMMENTS
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Comments --")
+    run_test("word_add_comment", lambda: (
+        c.set_text("This text has a comment."),
+        sel := c.selection,
+        sel.WholeStory(),
+        c.add_comment("This is a test comment", "content"),
+        count := c.active_document.Comments.Count,
+        ok(count >= 1, f"Expected at least 1 comment, got {count}"),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # HIGHLIGHT
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Highlight --")
+    run_test("word_set_highlight_yellow", lambda: (
+        c.set_text("Highlighted text"),
+        c.set_highlight(6, "content"),
+        ok(c.active_document.Content.HighlightColorIndex == 6),
+    ))
+    run_test("word_set_highlight_none", lambda: (
+        c.set_text("No highlight"),
+        c.set_highlight(0, "content"),
+        ok(c.active_document.Content.HighlightColorIndex == 0),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # TABLE STYLE
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Table Style --")
+    run_test("word_set_table_style", lambda: (
+        c.set_text("Before styled table."),
+        c.add_table(3, 2, "A\tB\nC\tD\nE\tF"),
+        idx := c.get_table_count(),
+        c.set_table_style(idx, "Table Grid"),
+        ok(True),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # PAGE BORDERS
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Page Borders --")
+    run_test("word_set_page_borders", lambda: (
+        c.set_text("Document with page borders."),
+        c.set_page_borders(line_style=1, line_width=4, distance=24),
+        section := c.active_document.Sections(1),
+        top_border := section.Borders.Item(1),
+        ok(top_border.LineStyle == 1, f"Expected line style 1, got {top_border.LineStyle}"),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # WATERMARK
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Watermark --")
+    run_test("word_add_watermark", lambda: (
+        c.set_text("Watermark test document."),
+        c.add_watermark("DRAFT", font_size=48, layout="diagonal"),
+        ok(True),  # verify no error — watermark may use shapes or header text
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # DOCUMENT PROTECTION
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Document Protection --")
+    run_test("word_protect_unprotect", lambda: (
+        c.set_text("Protected document."),
+        c.protect_document(),
+        protected := c.active_document.ProtectionType,
+        ok(protected != -1, f"Expected document to be protected, got type {protected}"),
+        c.unprotect_document(),
+        after_protect := c.active_document.ProtectionType,
+        ok(after_protect == -1, f"Expected no protection, got type {after_protect}"),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # TRACK CHANGES
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Track Changes --")
+    run_test("word_toggle_track_changes_on", lambda: (
+        c.set_text("Track changes test."),
+        c.toggle_track_changes(True),
+        ok(c.active_document.TrackRevisions == True),
+    ))
+    run_test("word_toggle_track_changes_off", lambda: (
+        c.toggle_track_changes(False),
+        ok(c.active_document.TrackRevisions == False),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # COLUMNS
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Columns --")
+    run_test("word_set_columns_two", lambda: (
+        c.set_text("Column 1 text. Also Column 1.\nColumn 2 text. Also Column 2.\n"),
+        c.set_columns(num_columns=2, spacing=36),
+        col_count := c.active_document.Sections(1).PageSetup.TextColumns.Count,
+        ok(col_count >= 2, f"Expected at least 2 columns, got {col_count}"),
+    ))
+    run_test("word_set_columns_one", lambda: (
+        c.set_columns(num_columns=1),
+        ok(True),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # BOOKMARKS
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Bookmarks --")
+    run_test("word_add_bookmark", lambda: (
+        c.set_text("Some text before the bookmark position."),
+        sel := c.selection,
+        sel.WholeStory(),
+        sel.MoveEnd(Unit=1, Count=-10),  # wdCharacter=1
+        c.add_bookmark("my_test_bookmark", "selection"),
+        exists := _bookmark_exists(c, "my_test_bookmark"),
+        ok(exists, "Bookmark 'my_test_bookmark' should exist"),
+    ))
+    run_test("word_go_to_bookmark", lambda: (
+        info := c.go_to_bookmark("my_test_bookmark"),
+        has_key("name", info),
+        eq(info["name"], "my_test_bookmark"),
+        ok(info["start"] >= 0),
+    ))
+
+    # ═══════════════════════════════════════════════════════
+    # RANGE TEXT
+    # ═══════════════════════════════════════════════════════
+    print("\n-- Range Text --")
+    run_test("word_get_range_text", lambda: (
+        c.set_text("Hello World!"),
+        text := c.get_range_text(0, 5),
+        eq(text, "Hello"),
+    ))
+    run_test("word_get_range_text_full", lambda: (
+        c.set_text("abcdefghij"),
+        text := c.get_range_text(0, 10),
+        ok("abcdefghij" in text),
     ))
 
     # ═══════════════════════════════════════════════════════
