@@ -78,7 +78,7 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {},
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -87,7 +87,7 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {},
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -98,10 +98,10 @@ TOOLS = [
             "properties": {
                 "filepath": {
                     "type": "string",
-                    "description": "Full path to the workbook file (.xlsx, .xls, .et, etc.).",
-                },
+                    "description": "Path to .xlsx/.xls/.et file"
+                }
             },
-            "required": ["filepath"],
+            "required": ["filepath"]
         },
     ),
     Tool(
@@ -112,10 +112,10 @@ TOOLS = [
             "properties": {
                 "filepath": {
                     "type": "string",
-                    "description": "Optional path to save the workbook to. If omitted, saves to current location.",
-                },
+                    "description": "Save path (default: current location)"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -126,11 +126,10 @@ TOOLS = [
             "properties": {
                 "save": {
                     "type": "boolean",
-                    "description": "Whether to save changes before closing. Default: true.",
-                    "default": True,
-                },
+                    "description": "Save before closing"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -139,7 +138,7 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {},
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -148,7 +147,7 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {},
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -159,10 +158,10 @@ TOOLS = [
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Optional name for the new sheet.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -173,14 +172,14 @@ TOOLS = [
             "properties": {
                 "old_name": {
                     "type": "string",
-                    "description": "Current name of the sheet.",
+                    "description": "Current sheet name"
                 },
                 "new_name": {
                     "type": "string",
-                    "description": "New name for the sheet.",
-                },
+                    "description": "New sheet name"
+                }
             },
-            "required": ["old_name", "new_name"],
+            "required": ["old_name", "new_name"]
         },
     ),
     Tool(
@@ -191,10 +190,10 @@ TOOLS = [
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Name of the sheet to delete.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["name"],
+            "required": ["name"]
         },
     ),
     Tool(
@@ -205,10 +204,10 @@ TOOLS = [
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Name of the sheet to activate.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["name"],
+            "required": ["name"]
         },
     ),
     Tool(
@@ -219,14 +218,14 @@ TOOLS = [
             "properties": {
                 "cell_ref": {
                     "type": "string",
-                    "description": "Cell reference like 'A1', 'B2', 'C10'.",
+                    "description": "Cell ref, e.g. 'A1'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name. Uses active sheet if not specified.",
-                },
+                    "description": "Sheet name (default: active)"
+                }
             },
-            "required": ["cell_ref"],
+            "required": ["cell_ref"]
         },
     ),
     Tool(
@@ -237,18 +236,18 @@ TOOLS = [
             "properties": {
                 "cell_ref": {
                     "type": "string",
-                    "description": "Cell reference like 'A1', 'B2', 'C10'.",
+                    "description": "Cell ref, e.g. 'A1'"
                 },
                 "value": {
                     "type": "string",
-                    "description": "The value to set. Numbers will be converted automatically.",
+                    "description": "Value (numbers auto-converted)"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name. Uses active sheet if not specified.",
-                },
+                    "description": "Sheet name (default: active)"
+                }
             },
-            "required": ["cell_ref", "value"],
+            "required": ["cell_ref", "value"]
         },
     ),
     Tool(
@@ -259,14 +258,14 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Range reference like 'A1:B10', 'C5:F20'.",
+                    "description": "Range, e.g. 'A1:B10'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name. Uses active sheet if not specified.",
-                },
+                    "description": "Sheet name (default: active)"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
     Tool(
@@ -277,18 +276,18 @@ TOOLS = [
             "properties": {
                 "start_cell": {
                     "type": "string",
-                    "description": "Top-left cell reference like 'A1', 'B2'.",
+                    "description": "Top-left cell, e.g. 'A1'"
                 },
                 "values": {
                     "type": "string",
-                    "description": "JSON-encoded 2D array of values. E.g., '[['Name','Age'],['John',30],['Jane',25]]'.",
+                    "description": "JSON 2D array, e.g. [['Name','Age'],['John',30]]"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name. Uses active sheet if not specified.",
-                },
+                    "description": "Sheet name (default: active)"
+                }
             },
-            "required": ["start_cell", "values"],
+            "required": ["start_cell", "values"]
         },
     ),
     Tool(
@@ -299,129 +298,17 @@ TOOLS = [
             "properties": {
                 "cell_or_range": {
                     "type": "string",
-                    "description": "Cell reference (e.g., 'A1') or range (e.g., 'A1:B10').",
+                    "description": "Cell reference (e.g., 'A1') or range (e.g., 'A1:B10')."
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name. Uses active sheet if not specified.",
-                },
+                    "description": "Sheet name (default: active)"
+                }
             },
-            "required": ["cell_or_range"],
+            "required": ["cell_or_range"]
         },
     ),
-    Tool(
-        name="wps_set_font_bold",
-        description="Set font bold for a cell or range.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "cell_or_range": {
-                    "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
-                },
-                "bold": {
-                    "type": "boolean",
-                    "description": "True to make bold, False to remove bold.",
-                    "default": True,
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["cell_or_range"],
-        },
-    ),
-    Tool(
-        name="wps_set_font_size",
-        description="Set font size for a cell or range.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "cell_or_range": {
-                    "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
-                },
-                "size": {
-                    "type": "integer",
-                    "description": "Font size in points (e.g., 12, 14, 18).",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["cell_or_range", "size"],
-        },
-    ),
-    Tool(
-        name="wps_set_cell_color",
-        description="Set the background (fill) color of a cell or range.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "cell_or_range": {
-                    "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
-                },
-                "color": {
-                    "type": "string",
-                    "description": "Color as RGB hex string (e.g., 'FF0000' for red, '00FF00' for green, '0000FF' for blue).",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["cell_or_range", "color"],
-        },
-    ),
-    Tool(
-        name="wps_set_alignment",
-        description="Set horizontal text alignment for a cell or range.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "cell_or_range": {
-                    "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
-                },
-                "alignment": {
-                    "type": "string",
-                    "description": "Alignment: 'left', 'center', 'right', 'general', or 'justify'.",
-                    "enum": ["left", "center", "right", "general", "justify"],
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["cell_or_range", "alignment"],
-        },
-    ),
-    Tool(
-        name="wps_set_number_format",
-        description="Set the number format for a cell or range (e.g., '0.00', '#,##0', 'yyyy-mm-dd').",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "cell_or_range": {
-                    "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
-                },
-                "format": {
-                    "type": "string",
-                    "description": "Excel number format string. Examples: '0.00' for 2 decimals, '#,##0' for thousands, '0%' for percent, 'yyyy-mm-dd' for date.",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["cell_or_range", "format"],
-        },
-    ),
-    Tool(
+                        Tool(
         name="wps_merge_cells",
         description="Merge a range of cells into one.",
         inputSchema={
@@ -429,14 +316,14 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Range to merge (e.g., 'A1:C1').",
+                    "description": "Range, e.g. 'A1:C1'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
     Tool(
@@ -447,14 +334,14 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Range to unmerge (e.g., 'A1:C1').",
+                    "description": "Range, e.g. 'A1:C1'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
     Tool(
@@ -465,129 +352,13 @@ TOOLS = [
             "properties": {
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
-    Tool(
-        name="wps_insert_row",
-        description="Insert a new row at the specified position.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "row": {
-                    "type": "integer",
-                    "description": "Row number at which to insert (e.g., 5 inserts before row 5).",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["row"],
-        },
-    ),
-    Tool(
-        name="wps_insert_column",
-        description="Insert a new column at the specified position.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "col": {
-                    "type": "integer",
-                    "description": "Column number at which to insert (1=A, 2=B, etc).",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["col"],
-        },
-    ),
-    Tool(
-        name="wps_delete_row",
-        description="Delete a row at the specified position.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "row": {
-                    "type": "integer",
-                    "description": "Row number to delete.",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["row"],
-        },
-    ),
-    Tool(
-        name="wps_delete_column",
-        description="Delete a column at the specified position.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "col": {
-                    "type": "integer",
-                    "description": "Column number to delete (1=A, 2=B, etc).",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["col"],
-        },
-    ),
-    Tool(
-        name="wps_set_row_height",
-        description="Set the height of a row in points.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "row": {
-                    "type": "integer",
-                    "description": "Row number.",
-                },
-                "height": {
-                    "type": "number",
-                    "description": "Row height in points.",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["row", "height"],
-        },
-    ),
-    Tool(
-        name="wps_set_column_width",
-        description="Set the width of a column in characters.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "col": {
-                    "type": "integer",
-                    "description": "Column number (1=A, 2=B, etc).",
-                },
-                "width": {
-                    "type": "number",
-                    "description": "Column width in characters.",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["col", "width"],
-        },
-    ),
-    Tool(
+                            Tool(
         name="wps_add_chart",
         description="Add a chart to a worksheet.",
         inputSchema={
@@ -595,40 +366,34 @@ TOOLS = [
             "properties": {
                 "chart_type": {
                     "type": "string",
-                    "description": "Chart type: 'column', 'line', 'pie', 'bar', 'area', or 'scatter'.",
-                    "enum": ["column", "line", "pie", "bar", "area", "scatter"],
-                    "default": "column",
+                    "description": "column/line/pie/bar/area/scatter"
                 },
                 "range_ref": {
                     "type": "string",
-                    "description": "Data range for the chart (e.g., 'A1:B10'). Include headers for best results.",
+                    "description": "Data range, e.g. 'A1:B10'"
                 },
                 "left": {
                     "type": "number",
-                    "description": "Left position in points.",
-                    "default": 100,
+                    "description": "Left position in points."
                 },
                 "top": {
                     "type": "number",
-                    "description": "Top position in points.",
-                    "default": 100,
+                    "description": "Top position in points."
                 },
                 "width": {
                     "type": "number",
-                    "description": "Chart width in points.",
-                    "default": 400,
+                    "description": "Width (points)"
                 },
                 "height": {
                     "type": "number",
-                    "description": "Chart height in points.",
-                    "default": 300,
+                    "description": "Height (points)"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
     Tool(
@@ -639,19 +404,18 @@ TOOLS = [
             "properties": {
                 "search_text": {
                     "type": "string",
-                    "description": "Text to search for.",
+                    "description": "Search text"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name to search in.",
+                    "description": "Sheet name"
                 },
                 "match_whole": {
                     "type": "boolean",
-                    "description": "If True, match whole cell content. If False (default), match partial.",
-                    "default": False,
-                },
+                    "description": "If True, match whole cell content. If False (default), match partial."
+                }
             },
-            "required": ["search_text"],
+            "required": ["search_text"]
         },
     ),
     Tool(
@@ -662,10 +426,10 @@ TOOLS = [
             "properties": {
                 "macro_name": {
                     "type": "string",
-                    "description": "The name of the macro/subroutine to run.",
-                },
+                    "description": "Macro name"
+                }
             },
-            "required": ["macro_name"],
+            "required": ["macro_name"]
         },
     ),
     Tool(
@@ -674,7 +438,7 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {},
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -683,101 +447,10 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {},
-            "required": [],
+            "required": []
         },
     ),
-    # ── Font & Text Formatting ──
-    Tool(
-        name="wps_set_font_name",
-        description="Set the font name/typeface for a cell or range (e.g., 'Arial', 'Calibri', 'Times New Roman').",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "cell_or_range": {
-                    "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
-                },
-                "font_name": {
-                    "type": "string",
-                    "description": "Font name (e.g., 'Arial', 'Calibri', 'Times New Roman', 'Microsoft YaHei').",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["cell_or_range", "font_name"],
-        },
-    ),
-    Tool(
-        name="wps_set_font_italic",
-        description="Set or remove italic formatting for a cell or range.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "cell_or_range": {
-                    "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
-                },
-                "italic": {
-                    "type": "boolean",
-                    "description": "True to make italic, False to remove italic.",
-                    "default": True,
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["cell_or_range"],
-        },
-    ),
-    Tool(
-        name="wps_set_font_color",
-        description="Set the font (text) color for a cell or range using an RGB hex string.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "cell_or_range": {
-                    "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
-                },
-                "color": {
-                    "type": "string",
-                    "description": "Font color as RGB hex string (e.g., 'FF0000' for red, '0000FF' for blue, '000000' for black).",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["cell_or_range", "color"],
-        },
-    ),
-    Tool(
-        name="wps_set_wrap_text",
-        description="Enable or disable text wrapping for a cell or range.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "cell_or_range": {
-                    "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
-                },
-                "wrap": {
-                    "type": "boolean",
-                    "description": "True to wrap text, False to unwrap.",
-                    "default": True,
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["cell_or_range"],
-        },
-    ),
-    Tool(
+                    Tool(
         name="wps_set_borders",
         description="Set borders for a cell or range. Supports all border edges and outline-only mode.",
         inputSchema={
@@ -785,77 +458,30 @@ TOOLS = [
             "properties": {
                 "cell_or_range": {
                     "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                    "description": "Cell/range, e.g. 'A1' or 'A1:C10'"
                 },
                 "border_style": {
                     "type": "string",
-                    "description": "Border line style: 'thin' (default), 'medium', 'thick', 'dotted', 'dashed', 'double', 'hairline', 'none'.",
-                    "enum": ["thin", "medium", "thick", "dotted", "dashed", "double", "hairline", "none"],
-                    "default": "thin",
+                    "description": "thin/medium/thick/dotted/dashed/double/hairline/none"
                 },
                 "border_color": {
                     "type": "string",
-                    "description": "Optional border color as RGB hex (e.g., '000000' for black, 'FF0000' for red).",
+                    "description": "Border RGB hex"
                 },
                 "outline_only": {
                     "type": "boolean",
-                    "description": "If True, set only outer borders. If False (default), set all borders including inner grid.",
-                    "default": False,
+                    "description": "Outline only (not inner grid)"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["cell_or_range"],
+            "required": ["cell_or_range"]
         },
     ),
-    # ── AutoFit / Freeze / Filter ──
-    Tool(
-        name="wps_autofit_columns",
-        description="Auto-fit column widths to their content. Can apply to all used columns or a specific range.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-                "start_col": {
-                    "type": "integer",
-                    "description": "Optional first column number (1=A). If omitted, fits all used columns.",
-                },
-                "end_col": {
-                    "type": "integer",
-                    "description": "Optional last column number. If omitted, fits only start_col or all columns.",
-                },
-            },
-            "required": [],
-        },
-    ),
-    Tool(
-        name="wps_autofit_rows",
-        description="Auto-fit row heights to their content. Can apply to all used rows or a specific range.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-                "start_row": {
-                    "type": "integer",
-                    "description": "Optional first row number. If omitted, fits all used rows.",
-                },
-                "end_row": {
-                    "type": "integer",
-                    "description": "Optional last row number. If omitted, fits only start_row or all rows.",
-                },
-            },
-            "required": [],
-        },
-    ),
-    Tool(
+    # ── Freeze / Filter ──
+            Tool(
         name="wps_freeze_panes",
         description="Freeze panes at a specific cell. Rows above and columns to the left of the cell are frozen.",
         inputSchema={
@@ -863,15 +489,14 @@ TOOLS = [
             "properties": {
                 "cell_ref": {
                     "type": "string",
-                    "description": "Cell at which to freeze. Default 'B2' freezes first row + first column. 'A2' freezes first row only. 'B1' freezes first column only.",
-                    "default": "B2",
+                    "description": "Freeze cell (B2=both, A2=row, B1=col)"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -882,10 +507,10 @@ TOOLS = [
             "properties": {
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -896,14 +521,14 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Optional range to apply filter (e.g., 'A1:D100'). If omitted, uses the entire used range.",
+                    "description": "Range (default: used range)"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     # ── Sort / Copy-Paste ──
@@ -915,24 +540,22 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Range to sort (e.g., 'A2:D100'). Include header row if present.",
+                    "description": "Range, e.g. 'A2:D100'"
                 },
                 "sort_key": {
                     "type": "string",
-                    "description": "Cell within the range to sort by (e.g., 'A2' to sort by column A). If omitted, sorts by first column.",
+                    "description": "Sort key cell, e.g. 'A2'"
                 },
                 "sort_order": {
                     "type": "string",
-                    "description": "Sort order: 'ascending' (default) or 'descending'.",
-                    "enum": ["ascending", "descending"],
-                    "default": "ascending",
+                    "description": "ascending/descending"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
     Tool(
@@ -943,14 +566,14 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Range to copy (e.g., 'A1:D10').",
+                    "description": "Range, e.g. 'A1:D10'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
     Tool(
@@ -961,19 +584,18 @@ TOOLS = [
             "properties": {
                 "dest_cell": {
                     "type": "string",
-                    "description": "Top-left cell to paste to (e.g., 'A1').",
+                    "description": "Dest cell, e.g. 'A1'"
                 },
                 "paste_special": {
                     "type": "string",
-                    "description": "Optional paste mode: 'values', 'formats', 'formulas', 'all' (default), 'transpose'.",
-                    "enum": ["values", "formats", "formulas", "all", "transpose"],
+                    "description": "values/formats/formulas/all/transpose"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["dest_cell"],
+            "required": ["dest_cell"]
         },
     ),
     # ── Find / Comment / Clear ──
@@ -985,10 +607,10 @@ TOOLS = [
             "properties": {
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -999,18 +621,18 @@ TOOLS = [
             "properties": {
                 "cell_ref": {
                     "type": "string",
-                    "description": "Cell reference (e.g., 'A1').",
+                    "description": "Cell ref, e.g. 'A1'"
                 },
                 "text": {
                     "type": "string",
-                    "description": "Comment text.",
+                    "description": "Comment text"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["cell_ref", "text"],
+            "required": ["cell_ref", "text"]
         },
     ),
     Tool(
@@ -1021,14 +643,14 @@ TOOLS = [
             "properties": {
                 "cell_ref": {
                     "type": "string",
-                    "description": "Cell reference (e.g., 'A1').",
+                    "description": "Cell ref, e.g. 'A1'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["cell_ref"],
+            "required": ["cell_ref"]
         },
     ),
     Tool(
@@ -1039,14 +661,14 @@ TOOLS = [
             "properties": {
                 "cell_or_range": {
                     "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                    "description": "Cell/range, e.g. 'A1' or 'A1:C10'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["cell_or_range"],
+            "required": ["cell_or_range"]
         },
     ),
     Tool(
@@ -1057,14 +679,14 @@ TOOLS = [
             "properties": {
                 "cell_or_range": {
                     "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
+                    "description": "Cell/range, e.g. 'A1' or 'A1:C10'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["cell_or_range"],
+            "required": ["cell_or_range"]
         },
     ),
     # ── Conditional Formatting ──
@@ -1076,37 +698,34 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Range to apply to (e.g., 'B2:B100').",
+                    "description": "Range, e.g. 'B2:B100'"
                 },
                 "operator": {
                     "type": "string",
-                    "description": "Comparison operator.",
-                    "enum": ["greaterThan", "lessThan", "equal", "between", "greaterThanOrEqual", "lessThanOrEqual", "notEqual"],
-                    "default": "greaterThan",
+                    "description": "Operator"
                 },
                 "formula": {
                     "type": "string",
-                    "description": "Threshold value or formula (e.g., '100', '0', '=$B$1').",
-                    "default": "0",
+                    "description": "Threshold/formula"
                 },
                 "font_color": {
                     "type": "string",
-                    "description": "Optional font color as RGB hex (e.g., 'FF0000' for red).",
+                    "description": "Font RGB hex"
                 },
                 "bg_color": {
                     "type": "string",
-                    "description": "Optional background fill color as RGB hex (e.g., 'FFFF00' for yellow).",
+                    "description": "Background RGB hex"
                 },
                 "bold": {
                     "type": "boolean",
-                    "description": "Whether to make the font bold.",
+                    "description": "Bold"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
     # ── Data Validation ──
@@ -1118,48 +737,42 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Range to apply validation to (e.g., 'C2:C100').",
+                    "description": "Range, e.g. 'C2:C100'"
                 },
                 "validation_type": {
                     "type": "string",
-                    "description": "Validation type: 'list' for dropdown, or 'whole', 'decimal', 'date', 'time', 'textLength', 'custom'.",
-                    "enum": ["list", "whole", "decimal", "date", "time", "textLength", "custom"],
-                    "default": "list",
+                    "description": "list/whole/decimal/date/time/textLength/custom"
                 },
                 "formula1": {
                     "type": "string",
-                    "description": "Validation formula. For list: 'Option1,Option2,Option3' or '=$A$1:$A$10' for range-based list. For other types: the min/allowed value.",
-                    "default": "",
+                    "description": "Formula (list: 'A,B,C' or '=$A$1:$A$10')"
                 },
                 "formula2": {
                     "type": "string",
-                    "description": "Second formula for 'between' / 'notBetween' operators (max value).",
-                    "default": "",
+                    "description": "Second formula (max)"
                 },
                 "ignore_blank": {
                     "type": "boolean",
-                    "description": "Allow blank cells. Default: true.",
-                    "default": True,
+                    "description": "Allow blanks"
                 },
                 "show_dropdown": {
                     "type": "boolean",
-                    "description": "Show dropdown arrow for list validation. Default: true.",
-                    "default": True,
+                    "description": "Show dropdown arrow"
                 },
                 "error_title": {
                     "type": "string",
-                    "description": "Title for the error dialog when invalid data is entered.",
+                    "description": "Error dialog title"
                 },
                 "error_message": {
                     "type": "string",
-                    "description": "Error message to show when invalid data is entered.",
+                    "description": "Error message"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
     # ── Sheet Protection ──
@@ -1171,40 +784,34 @@ TOOLS = [
             "properties": {
                 "password": {
                     "type": "string",
-                    "description": "Optional password to protect the sheet.",
-                    "default": "",
+                    "description": "Password"
                 },
                 "allow_sort": {
                     "type": "boolean",
-                    "description": "Allow sorting of locked cells. Default: false.",
-                    "default": False,
+                    "description": "Allow sort"
                 },
                 "allow_filter": {
                     "type": "boolean",
-                    "description": "Allow using AutoFilter. Default: false.",
-                    "default": False,
+                    "description": "Allow filter"
                 },
                 "allow_format_cells": {
                     "type": "boolean",
-                    "description": "Allow formatting cells. Default: false.",
-                    "default": False,
+                    "description": "Allow format cells"
                 },
                 "allow_insert_rows": {
                     "type": "boolean",
-                    "description": "Allow inserting rows. Default: false.",
-                    "default": False,
+                    "description": "Allow insert rows"
                 },
                 "allow_delete_rows": {
                     "type": "boolean",
-                    "description": "Allow deleting rows. Default: false.",
-                    "default": False,
+                    "description": "Allow delete rows"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -1215,15 +822,14 @@ TOOLS = [
             "properties": {
                 "password": {
                     "type": "string",
-                    "description": "Password if the sheet was protected with one.",
-                    "default": "",
+                    "description": "Password"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     # ── Page Setup ──
@@ -1235,14 +841,14 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Range to set as print area (e.g., 'A1:F50').",
+                    "description": "Range, e.g. 'A1:F50'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
     Tool(
@@ -1253,10 +859,10 @@ TOOLS = [
             "properties": {
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -1267,15 +873,14 @@ TOOLS = [
             "properties": {
                 "orientation": {
                     "type": "string",
-                    "description": "Page orientation: 'portrait' or 'landscape'.",
-                    "enum": ["portrait", "landscape"],
+                    "description": "portrait/landscape"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["orientation"],
+            "required": ["orientation"]
         },
     ),
     # ── Formula ──
@@ -1287,18 +892,18 @@ TOOLS = [
             "properties": {
                 "cell_ref": {
                     "type": "string",
-                    "description": "Cell reference (e.g., 'A1').",
+                    "description": "Cell ref, e.g. 'A1'"
                 },
                 "formula": {
                     "type": "string",
-                    "description": "The Excel formula, including leading '=' (e.g., '=SUM(B2:B10)', '=VLOOKUP(A1,D:E,2,FALSE)').",
+                    "description": "Formula, e.g. '=SUM(B2:B10)'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["cell_ref", "formula"],
+            "required": ["cell_ref", "formula"]
         },
     ),
     Tool(
@@ -1309,14 +914,14 @@ TOOLS = [
             "properties": {
                 "cell_ref": {
                     "type": "string",
-                    "description": "Cell reference (e.g., 'A1').",
+                    "description": "Cell ref, e.g. 'A1'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["cell_ref"],
+            "required": ["cell_ref"]
         },
     ),
     # ── Export ──
@@ -1328,14 +933,14 @@ TOOLS = [
             "properties": {
                 "filepath": {
                     "type": "string",
-                    "description": "Full path for the output PDF file (e.g., 'C:\\report.pdf').",
+                    "description": "Full path for the output PDF file (e.g., 'C:\\report.pdf')."
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name. If omitted, exports the entire workbook.",
-                },
+                    "description": "Optional sheet name. If omitted, exports the entire workbook."
+                }
             },
-            "required": ["filepath"],
+            "required": ["filepath"]
         },
     ),
     # ── Find / Replace ──
@@ -1347,28 +952,26 @@ TOOLS = [
             "properties": {
                 "find_text": {
                     "type": "string",
-                    "description": "Text to search for.",
+                    "description": "Search text"
                 },
                 "replace_text": {
                     "type": "string",
-                    "description": "Replacement text.",
+                    "description": "Replacement text"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
+                    "description": "Sheet name"
                 },
                 "match_case": {
                     "type": "boolean",
-                    "description": "If True, match case. Default: false.",
-                    "default": False,
+                    "description": "Match case"
                 },
                 "match_whole": {
                     "type": "boolean",
-                    "description": "If True, match whole cell content only. Default: false.",
-                    "default": False,
-                },
+                    "description": "Match whole cell only"
+                }
             },
-            "required": ["find_text", "replace_text"],
+            "required": ["find_text", "replace_text"]
         },
     ),
     # ── Workbook Activation ──
@@ -1380,10 +983,10 @@ TOOLS = [
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Name of the workbook to activate.",
-                },
+                    "description": "Workbook name"
+                }
             },
-            "required": ["name"],
+            "required": ["name"]
         },
     ),
     # ── Remove Duplicates ──
@@ -1395,50 +998,26 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Range to remove duplicates from (e.g., 'A1:D100').",
+                    "description": "Range, e.g. 'A1:D100'"
                 },
                 "columns": {
                     "type": "string",
-                    "description": "Optional JSON array of 1-based column indices within the range to check (e.g., '[1,2]'). If omitted, all columns are used.",
+                    "description": "Column indices (JSON array, 1-based)"
                 },
                 "has_header": {
                     "type": "boolean",
-                    "description": "Whether the range includes a header row. Default: true.",
-                    "default": True,
+                    "description": "Has header row"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
     # ── Vertical Alignment ──
-    Tool(
-        name="wps_set_vertical_alignment",
-        description="Set vertical text alignment for a cell or range.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "cell_or_range": {
-                    "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
-                },
-                "alignment": {
-                    "type": "string",
-                    "description": "Vertical alignment: 'top', 'center', 'bottom', 'justify', 'distributed'.",
-                    "enum": ["top", "center", "bottom", "justify", "distributed"],
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["cell_or_range", "alignment"],
-        },
-    ),
-    # ── Sheet Copy / Move ──
+        # ── Sheet Copy / Move ──
     Tool(
         name="wps_copy_sheet",
         description="Create a copy of a worksheet within the active workbook.",
@@ -1447,22 +1026,22 @@ TOOLS = [
             "properties": {
                 "source_name": {
                     "type": "string",
-                    "description": "Name of the sheet to copy.",
+                    "description": "Sheet name"
                 },
                 "new_name": {
                     "type": "string",
-                    "description": "Optional new name for the copied sheet.",
+                    "description": "New sheet name"
                 },
                 "before": {
                     "type": "string",
-                    "description": "Optional sheet name to insert the copy before.",
+                    "description": "Insert before sheet"
                 },
                 "after": {
                     "type": "string",
-                    "description": "Optional sheet name to insert the copy after.",
-                },
+                    "description": "Insert after sheet"
+                }
             },
-            "required": ["source_name"],
+            "required": ["source_name"]
         },
     ),
     Tool(
@@ -1473,18 +1052,18 @@ TOOLS = [
             "properties": {
                 "source_name": {
                     "type": "string",
-                    "description": "Name of the sheet to move.",
+                    "description": "Sheet name"
                 },
                 "before": {
                     "type": "string",
-                    "description": "Optional sheet name to move before.",
+                    "description": "Move before sheet"
                 },
                 "after": {
                     "type": "string",
-                    "description": "Optional sheet name to move after. Default: moves to end.",
-                },
+                    "description": "Move after sheet"
+                }
             },
-            "required": ["source_name"],
+            "required": ["source_name"]
         },
     ),
     # ── Show / Hide Sheet ──
@@ -1496,10 +1075,10 @@ TOOLS = [
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Name of the sheet to hide.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["name"],
+            "required": ["name"]
         },
     ),
     Tool(
@@ -1510,10 +1089,10 @@ TOOLS = [
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Name of the sheet to unhide.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["name"],
+            "required": ["name"]
         },
     ),
     # ── Hyperlinks ──
@@ -1525,26 +1104,26 @@ TOOLS = [
             "properties": {
                 "cell_ref": {
                     "type": "string",
-                    "description": "Cell reference (e.g., 'A1').",
+                    "description": "Cell ref, e.g. 'A1'"
                 },
                 "address": {
                     "type": "string",
-                    "description": "URL, file path, or cell reference the link points to.",
+                    "description": "URL, file path, or cell ref"
                 },
                 "text_to_display": {
                     "type": "string",
-                    "description": "Optional display text for the hyperlink.",
+                    "description": "Display text"
                 },
                 "screen_tip": {
                     "type": "string",
-                    "description": "Optional tooltip text shown on hover.",
+                    "description": "Tooltip"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["cell_ref", "address"],
+            "required": ["cell_ref", "address"]
         },
     ),
     Tool(
@@ -1555,14 +1134,14 @@ TOOLS = [
             "properties": {
                 "cell_or_range": {
                     "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:D10') to remove hyperlinks from.",
+                    "description": "Cell/range, e.g. 'A1' or 'A1:D10'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["cell_or_range"],
+            "required": ["cell_or_range"]
         },
     ),
     # ── Conditional Formatting Delete ──
@@ -1574,131 +1153,18 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Range to remove conditional formatting from (e.g., 'A1:A100').",
+                    "description": "Range, e.g. 'A1:A100'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
-    # ── Font Underline ──
-    Tool(
-        name="wps_set_font_underline",
-        description="Set font underline style for a cell or range.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "cell_or_range": {
-                    "type": "string",
-                    "description": "Cell (e.g., 'A1') or range (e.g., 'A1:C10').",
-                },
-                "underline_style": {
-                    "type": "string",
-                    "description": "Underline style: 'none', 'single', 'double', 'singleAccounting', 'doubleAccounting'.",
-                    "enum": ["none", "single", "double", "singleAccounting", "doubleAccounting"],
-                    "default": "single",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["cell_or_range"],
-        },
-    ),
-    # ── Row / Column Grouping ──
-    Tool(
-        name="wps_group_rows",
-        description="Group rows together for outlining (collapse/expand).",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "start_row": {
-                    "type": "integer",
-                    "description": "First row to group.",
-                },
-                "end_row": {
-                    "type": "integer",
-                    "description": "Last row to group.",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["start_row", "end_row"],
-        },
-    ),
-    Tool(
-        name="wps_ungroup_rows",
-        description="Ungroup previously grouped rows.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "start_row": {
-                    "type": "integer",
-                    "description": "First row to ungroup.",
-                },
-                "end_row": {
-                    "type": "integer",
-                    "description": "Last row to ungroup.",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["start_row", "end_row"],
-        },
-    ),
-    Tool(
-        name="wps_group_columns",
-        description="Group columns together for outlining (collapse/expand).",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "start_col": {
-                    "type": "integer",
-                    "description": "First column to group (1=A, 2=B, etc).",
-                },
-                "end_col": {
-                    "type": "integer",
-                    "description": "Last column to group (1=A, 2=B, etc).",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["start_col", "end_col"],
-        },
-    ),
-    Tool(
-        name="wps_ungroup_columns",
-        description="Ungroup previously grouped columns.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "start_col": {
-                    "type": "integer",
-                    "description": "First column to ungroup (1=A, 2=B, etc).",
-                },
-                "end_col": {
-                    "type": "integer",
-                    "description": "Last column to ungroup (1=A, 2=B, etc).",
-                },
-                "sheet_name": {
-                    "type": "string",
-                    "description": "Optional sheet name.",
-                },
-            },
-            "required": ["start_col", "end_col"],
-        },
-    ),
-    # ── Page Margins / Headers ──
+        # ── Row / Column Grouping ──
+                    # ── Page Margins / Headers ──
     Tool(
         name="wps_set_page_margins",
         description="Set page margins (in points) for a sheet.",
@@ -1707,34 +1173,34 @@ TOOLS = [
             "properties": {
                 "left": {
                     "type": "number",
-                    "description": "Left margin in points.",
+                    "description": "Left margin (points)"
                 },
                 "right": {
                     "type": "number",
-                    "description": "Right margin in points.",
+                    "description": "Right margin (points)"
                 },
                 "top": {
                     "type": "number",
-                    "description": "Top margin in points.",
+                    "description": "Top margin (points)"
                 },
                 "bottom": {
                     "type": "number",
-                    "description": "Bottom margin in points.",
+                    "description": "Bottom margin (points)"
                 },
                 "header": {
                     "type": "number",
-                    "description": "Header margin in points.",
+                    "description": "Header margin (points)"
                 },
                 "footer": {
                     "type": "number",
-                    "description": "Footer margin in points.",
+                    "description": "Footer margin (points)"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -1745,40 +1211,34 @@ TOOLS = [
             "properties": {
                 "left_header": {
                     "type": "string",
-                    "description": "Left header text.",
-                    "default": "",
+                    "description": "Left header"
                 },
                 "center_header": {
                     "type": "string",
-                    "description": "Center header text.",
-                    "default": "",
+                    "description": "Center header"
                 },
                 "right_header": {
                     "type": "string",
-                    "description": "Right header text.",
-                    "default": "",
+                    "description": "Right header"
                 },
                 "left_footer": {
                     "type": "string",
-                    "description": "Left footer text.",
-                    "default": "",
+                    "description": "Left footer"
                 },
                 "center_footer": {
                     "type": "string",
-                    "description": "Center footer text (e.g., 'Page &P of &N').",
-                    "default": "",
+                    "description": "Center footer"
                 },
                 "right_footer": {
                     "type": "string",
-                    "description": "Right footer text.",
-                    "default": "",
+                    "description": "Right footer"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     # ── Text to Columns ──
@@ -1790,19 +1250,18 @@ TOOLS = [
             "properties": {
                 "range_ref": {
                     "type": "string",
-                    "description": "Single-column range to split (e.g., 'A1:A100').",
+                    "description": "Range, e.g. 'A1:A100'"
                 },
                 "delimiter": {
                     "type": "string",
-                    "description": "Delimiter character: ',' (comma), ';' (semicolon), '\\t' (tab), ' ' (space), '|' (pipe). Default: ','.",
-                    "default": ",",
+                    "description": "Delimiter character: ',' (comma), ';' (semicolon), '\\t' (tab), ' ' (space), '|' (pipe). Default: ','."
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["range_ref"],
+            "required": ["range_ref"]
         },
     ),
     # ── Named Ranges ──
@@ -1814,18 +1273,18 @@ TOOLS = [
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Name for the named range.",
+                    "description": "Name"
                 },
                 "refers_to": {
                     "type": "string",
-                    "description": "The range reference formula (e.g., '=Sheet1!$A$1:$D$10', '=Sheet1!$A:$A').",
+                    "description": "Range formula, e.g. '=Sheet1!$A$1:$D$10'"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name for scope.",
-                },
+                    "description": "Sheet name (scope)"
+                }
             },
-            "required": ["name", "refers_to"],
+            "required": ["name", "refers_to"]
         },
     ),
     Tool(
@@ -1836,10 +1295,10 @@ TOOLS = [
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Name of the named range to delete.",
-                },
+                    "description": "Name"
+                }
             },
-            "required": ["name"],
+            "required": ["name"]
         },
     ),
     Tool(
@@ -1848,7 +1307,7 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {},
-            "required": [],
+            "required": []
         },
     ),
     # ── Pivot Table ──
@@ -1860,35 +1319,34 @@ TOOLS = [
             "properties": {
                 "source_range": {
                     "type": "string",
-                    "description": "Source data range (e.g., 'A1:F100').",
+                    "description": "Source range, e.g. 'A1:F100'"
                 },
                 "dest_cell": {
                     "type": "string",
-                    "description": "Top-left cell where the pivot table will be placed (e.g., 'H1').",
+                    "description": "Dest cell, e.g. 'H1'"
                 },
                 "pivot_name": {
                     "type": "string",
-                    "description": "Optional name for the pivot table.",
-                    "default": "PivotTable1",
+                    "description": "Pivot table name"
                 },
                 "row_fields": {
                     "type": "string",
-                    "description": "Optional JSON array of field names for row labels (e.g., [Category, SubCategory]).",
+                    "description": "Row field names (JSON array)"
                 },
                 "column_fields": {
                     "type": "string",
-                    "description": "Optional JSON array of field names for column labels (e.g., [Year]).",
+                    "description": "Column field names (JSON array)"
                 },
                 "data_fields": {
                     "type": "string",
-                    "description": "Optional JSON array of field names for values (e.g., [Amount]).",
+                    "description": "Value field names (JSON array)"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name for both source and destination.",
-                },
+                    "description": "Sheet name (source & dest)"
+                }
             },
-            "required": ["source_range", "dest_cell"],
+            "required": ["source_range", "dest_cell"]
         },
     ),
     # ── Sparklines ──
@@ -1900,24 +1358,22 @@ TOOLS = [
             "properties": {
                 "source_range": {
                     "type": "string",
-                    "description": "Data range for the sparkline (e.g., 'A1:A10').",
+                    "description": "Data range, e.g. 'A1:A10'"
                 },
                 "dest_cell": {
                     "type": "string",
-                    "description": "Cell where the sparkline will be placed.",
+                    "description": "Dest cell"
                 },
                 "spark_type": {
                     "type": "string",
-                    "description": "Sparkline type: 'line', 'column', or 'winloss'.",
-                    "enum": ["line", "column", "winloss"],
-                    "default": "line",
+                    "description": "line/column/winloss"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["source_range", "dest_cell"],
+            "required": ["source_range", "dest_cell"]
         },
     ),
     # ── Insert Picture / Shape ──
@@ -1929,34 +1385,30 @@ TOOLS = [
             "properties": {
                 "filepath": {
                     "type": "string",
-                    "description": "Full path to the image file.",
+                    "description": "Image file path"
                 },
                 "left": {
                     "type": "number",
-                    "description": "Left position in points. Default: 100.",
-                    "default": 100,
+                    "description": "Left (points)"
                 },
                 "top": {
                     "type": "number",
-                    "description": "Top position in points. Default: 100.",
-                    "default": 100,
+                    "description": "Top (points)"
                 },
                 "width": {
                     "type": "number",
-                    "description": "Width in points. Default: 200.",
-                    "default": 200,
+                    "description": "Width (points)"
                 },
                 "height": {
                     "type": "number",
-                    "description": "Height in points. Default: 150.",
-                    "default": 150,
+                    "description": "Height (points)"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": ["filepath"],
+            "required": ["filepath"]
         },
     ),
     Tool(
@@ -1967,36 +1419,30 @@ TOOLS = [
             "properties": {
                 "shape_type": {
                     "type": "string",
-                    "description": "Shape type: 'rectangle', 'oval', 'line', 'arrow', 'textbox'.",
-                    "enum": ["rectangle", "oval", "line", "arrow", "textbox"],
-                    "default": "rectangle",
+                    "description": "rectangle/oval/line/arrow/textbox"
                 },
                 "left": {
                     "type": "number",
-                    "description": "Left position in points. Default: 100.",
-                    "default": 100,
+                    "description": "Left (points)"
                 },
                 "top": {
                     "type": "number",
-                    "description": "Top position in points. Default: 100.",
-                    "default": 100,
+                    "description": "Top (points)"
                 },
                 "width": {
                     "type": "number",
-                    "description": "Width in points. Default: 200.",
-                    "default": 200,
+                    "description": "Width (points)"
                 },
                 "height": {
                     "type": "number",
-                    "description": "Height in points. Default: 100.",
-                    "default": 100,
+                    "description": "Height (points)"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     # ── Gridlines ──
@@ -2008,18 +1454,248 @@ TOOLS = [
             "properties": {
                 "visible": {
                     "type": "boolean",
-                    "description": "True to show gridlines, False to hide them. Default: true.",
-                    "default": True,
+                    "description": "Show gridlines"
                 },
                 "sheet_name": {
                     "type": "string",
-                    "description": "Optional sheet name.",
-                },
+                    "description": "Sheet name"
+                }
             },
-            "required": [],
+            "required": []
+        },
+    ),
+    # ── Consolidated Formatting ──
+    Tool(
+        name="wps_format_font",
+        description="Set font properties (bold, italic, name, size, color, underline) for a cell or range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell/range, e.g. 'A1' or 'A1:C10'"
+                },
+                "bold": {
+                    "type": "boolean",
+                    "description": "Bold on/off"
+                },
+                "italic": {
+                    "type": "boolean",
+                    "description": "Italic on/off"
+                },
+                "font_name": {
+                    "type": "string",
+                    "description": "Font name, e.g. 'Arial'"
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "Font size (points)"
+                },
+                "color": {
+                    "type": "string",
+                    "description": "RGB hex, e.g. 'FF0000'=red"
+                },
+                "underline": {
+                    "type": "string",
+                    "description": "none/single/double/singleAccounting/doubleAccounting"
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Sheet name"
+                }
+            },
+            "required": ["cell_or_range"]
+        },
+    ),
+    Tool(
+        name="wps_format_cell",
+        description="Set cell appearance (fill color, alignment, number format, wrap text) for a cell or range.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "cell_or_range": {
+                    "type": "string",
+                    "description": "Cell/range, e.g. 'A1' or 'A1:C10'"
+                },
+                "fill_color": {
+                    "type": "string",
+                    "description": "RGB hex, e.g. 'FF0000'=red"
+                },
+                "alignment": {
+                    "type": "string",
+                    "description": "left/center/right/general/justify"
+                },
+                "vertical_alignment": {
+                    "type": "string",
+                    "description": "top/center/bottom/justify/distributed"
+                },
+                "number_format": {
+                    "type": "string",
+                    "description": "Format string, e.g. '0.00', '#,##0', 'yyyy-mm-dd'"
+                },
+                "wrap_text": {
+                    "type": "boolean",
+                    "description": "Wrap text on/off"
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Sheet name"
+                }
+            },
+            "required": ["cell_or_range"]
+        },
+    ),
+    # ── Consolidated Row/Col ──
+    Tool(
+        name="wps_insert",
+        description="Insert a row or column at the specified position.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "position": {
+                    "type": "integer",
+                    "description": "Row or column number (1=A for columns)"
+                },
+                "insert_type": {
+                    "type": "string",
+                    "description": "'row' or 'column'"
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Sheet name"
+                }
+            },
+            "required": ["position", "insert_type"]
+        },
+    ),
+    Tool(
+        name="wps_delete",
+        description="Delete a row or column at the specified position.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "position": {
+                    "type": "integer",
+                    "description": "Row or column number (1=A for columns)"
+                },
+                "delete_type": {
+                    "type": "string",
+                    "description": "'row' or 'column'"
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Sheet name"
+                }
+            },
+            "required": ["position", "delete_type"]
+        },
+    ),
+    Tool(
+        name="wps_set_dimensions",
+        description="Set row height or column width.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "position": {
+                    "type": "integer",
+                    "description": "Row or column number (1=A for columns)"
+                },
+                "size": {
+                    "type": "number",
+                    "description": "Height (points) for rows, width (chars) for columns"
+                },
+                "dimension_type": {
+                    "type": "string",
+                    "description": "'row' or 'column'"
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Sheet name"
+                }
+            },
+            "required": ["position", "size", "dimension_type"]
+        },
+    ),
+    Tool(
+        name="wps_group",
+        description="Group rows or columns for outlining (collapse/expand).",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "start": {
+                    "type": "integer",
+                    "description": "First row or column (1=A for columns)"
+                },
+                "end": {
+                    "type": "integer",
+                    "description": "Last row or column"
+                },
+                "group_type": {
+                    "type": "string",
+                    "description": "'row' or 'column'"
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Sheet name"
+                }
+            },
+            "required": ["start", "end", "group_type"]
+        },
+    ),
+    Tool(
+        name="wps_ungroup",
+        description="Ungroup previously grouped rows or columns.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "start": {
+                    "type": "integer",
+                    "description": "First row or column (1=A for columns)"
+                },
+                "end": {
+                    "type": "integer",
+                    "description": "Last row or column"
+                },
+                "group_type": {
+                    "type": "string",
+                    "description": "'row' or 'column'"
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Sheet name"
+                }
+            },
+            "required": ["start", "end", "group_type"]
+        },
+    ),
+    Tool(
+        name="wps_autofit",
+        description="Auto-fit column widths or row heights to content.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "fit_type": {
+                    "type": "string",
+                    "description": "'columns' or 'rows'"
+                },
+                "start": {
+                    "type": "integer",
+                    "description": "First col/row (1=A for cols)"
+                },
+                "end": {
+                    "type": "integer",
+                    "description": "Last col/row"
+                },
+                "sheet_name": {
+                    "type": "string",
+                    "description": "Sheet name"
+                }
+            },
+            "required": []
         },
     ),
 ]
+
 
 
 # ── Tool Handler ────────────────────────────────────────────────────────
@@ -2051,7 +1727,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         logger.exception(f"Error executing tool '{name}'")
         return [TextContent(type="text", text=json.dumps({
             "error": str(e),
-            "tool": name,
+            "tool": name
         }, ensure_ascii=False))]
 
 
@@ -2152,37 +1828,77 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSExcelClient) -> st
         client.clear_range(args["cell_or_range"], args.get("sheet_name"))
         result = {"message": f"Cleared: {args['cell_or_range']}"}
 
-    # ── Formatting ──
-    elif name == "wps_set_font_bold":
-        bold = args.get("bold", True)
-        client.set_font_bold(args["cell_or_range"], bold, args.get("sheet_name"))
-        result = {"message": f"Set {args['cell_or_range']} font bold = {bold}"}
+    # ── Consolidated Formatting ──
+    elif name == "wps_format_font":
+        sheet = args.get("sheet_name")
+        cr = args["cell_or_range"]
+        if "bold" in args:
+            client.set_font_bold(cr, args["bold"], sheet)
+        if "italic" in args:
+            client.set_font_italic(cr, args["italic"], sheet)
+        if "font_name" in args:
+            client.set_font_name(cr, args["font_name"], sheet)
+        if "size" in args:
+            client.set_font_size(cr, args["size"], sheet)
+        if "color" in args:
+            color_int = int(args["color"].lstrip("#"), 16)
+            client.set_font_color(cr, color_int, sheet)
+        if "underline" in args:
+            client.set_font_underline(cr, args["underline"], sheet)
+        result = {"message": f"Formatted font on {cr}"}
 
+    elif name == "wps_format_cell":
+        sheet = args.get("sheet_name")
+        cr = args["cell_or_range"]
+        if "fill_color" in args:
+            color_int = int(args["fill_color"].lstrip("#"), 16)
+            client.set_cell_color(cr, color_int, sheet)
+        if "alignment" in args:
+            client.set_horizontal_alignment(cr, args["alignment"], sheet)
+        if "vertical_alignment" in args:
+            client.set_vertical_alignment(cr, args["vertical_alignment"], sheet)
+        if "number_format" in args:
+            client.set_number_format(cr, args["number_format"], sheet)
+        if "wrap_text" in args:
+            client.set_wrap_text(cr, args["wrap_text"], sheet)
+        result = {"message": f"Formatted cell {cr}"}
+
+    # ── Backward compat: old font/cell format names ──
+    elif name == "wps_set_font_bold":
+        client.set_font_bold(args["cell_or_range"], args.get("bold", True), args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} font bold = {args.get('bold', True)}"}
     elif name == "wps_set_font_size":
         client.set_font_size(args["cell_or_range"], args["size"], args.get("sheet_name"))
         result = {"message": f"Set {args['cell_or_range']} font size = {args['size']}"}
-
     elif name == "wps_set_cell_color":
         color_hex = args["color"].lstrip("#")
-        color_int = int(color_hex, 16)
-        client.set_cell_color(args["cell_or_range"], color_int, args.get("sheet_name"))
+        client.set_cell_color(args["cell_or_range"], int(color_hex, 16), args.get("sheet_name"))
         result = {"message": f"Set {args['cell_or_range']} fill color = #{color_hex}"}
-
     elif name == "wps_set_alignment":
-        client.set_horizontal_alignment(
-            args["cell_or_range"],
-            args["alignment"],
-            args.get("sheet_name"),
-        )
+        client.set_horizontal_alignment(args["cell_or_range"], args["alignment"], args.get("sheet_name"))
         result = {"message": f"Set {args['cell_or_range']} alignment = {args['alignment']}"}
-
     elif name == "wps_set_number_format":
-        client.set_number_format(
-            args["cell_or_range"],
-            args["format"],
-            args.get("sheet_name"),
-        )
+        client.set_number_format(args["cell_or_range"], args["format"], args.get("sheet_name"))
         result = {"message": f"Set {args['cell_or_range']} number format = '{args['format']}'"}
+    elif name == "wps_set_font_name":
+        client.set_font_name(args["cell_or_range"], args["font_name"], args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} font name = '{args['font_name']}'"}
+    elif name == "wps_set_font_italic":
+        client.set_font_italic(args["cell_or_range"], args.get("italic", True), args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} font italic = {args.get('italic', True)}"}
+    elif name == "wps_set_font_color":
+        color_hex = args["color"].lstrip("#")
+        client.set_font_color(args["cell_or_range"], int(color_hex, 16), args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} font color = #{color_hex}"}
+    elif name == "wps_set_wrap_text":
+        client.set_wrap_text(args["cell_or_range"], args.get("wrap", True), args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} wrap text = {args.get('wrap', True)}"}
+    elif name == "wps_set_vertical_alignment":
+        client.set_vertical_alignment(args["cell_or_range"], args["alignment"], args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} vertical alignment = {args['alignment']}"}
+    elif name == "wps_set_font_underline":
+        client.set_font_underline(args["cell_or_range"], args.get("underline_style", "single"), args.get("sheet_name"))
+        result = {"message": f"Set {args['cell_or_range']} underline = {args.get('underline_style', 'single')}"}
 
     elif name == "wps_merge_cells":
         client.merge_cells(args["range_ref"], args.get("sheet_name"))
@@ -2200,29 +1916,55 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSExcelClient) -> st
         result = {
             "address": addr,
             "row_count": rows,
-            "column_count": cols,
+            "column_count": cols
         }
 
+    elif name == "wps_insert":
+        pos = args["position"]
+        sheet = args.get("sheet_name")
+        if args["insert_type"] == "row":
+            client.insert_row(pos, sheet)
+            result = {"message": f"Inserted row at position {pos}"}
+        else:
+            client.insert_column(pos, sheet)
+            result = {"message": f"Inserted column at position {pos}"}
+
+    elif name == "wps_delete":
+        pos = args["position"]
+        sheet = args.get("sheet_name")
+        if args["delete_type"] == "row":
+            client.delete_row(pos, sheet)
+            result = {"message": f"Deleted row {pos}"}
+        else:
+            client.delete_column(pos, sheet)
+            result = {"message": f"Deleted column {pos}"}
+
+    elif name == "wps_set_dimensions":
+        pos = args["position"]
+        sheet = args.get("sheet_name")
+        if args["dimension_type"] == "row":
+            client.set_row_height(pos, args["size"], sheet)
+            result = {"message": f"Set row {pos} height = {args['size']}"}
+        else:
+            client.set_column_width(pos, args["size"], sheet)
+            result = {"message": f"Set column {pos} width = {args['size']}"}
+
+    # ── Backward compat: old insert/delete/size names ──
     elif name == "wps_insert_row":
         client.insert_row(args["row"], args.get("sheet_name"))
         result = {"message": f"Inserted row at position {args['row']}"}
-
     elif name == "wps_insert_column":
         client.insert_column(args["col"], args.get("sheet_name"))
         result = {"message": f"Inserted column at position {args['col']}"}
-
     elif name == "wps_delete_row":
         client.delete_row(args["row"], args.get("sheet_name"))
         result = {"message": f"Deleted row {args['row']}"}
-
     elif name == "wps_delete_column":
         client.delete_column(args["col"], args.get("sheet_name"))
         result = {"message": f"Deleted column {args['col']}"}
-
     elif name == "wps_set_row_height":
         client.set_row_height(args["row"], args["height"], args.get("sheet_name"))
         result = {"message": f"Set row {args['row']} height = {args['height']}"}
-
     elif name == "wps_set_column_width":
         client.set_column_width(args["col"], args["width"], args.get("sheet_name"))
         result = {"message": f"Set column {args['col']} width = {args['width']}"}
@@ -2258,7 +2000,6 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSExcelClient) -> st
         ret = client.run_macro(args["macro_name"])
         result = {"message": f"Ran macro '{args['macro_name']}'", "return_value": str(ret)}
 
-    # ── Font & Text Formatting ──
     elif name == "wps_set_font_name":
         client.set_font_name(args["cell_or_range"], args["font_name"], args.get("sheet_name"))
         result = {"message": f"Set {args['cell_or_range']} font name = '{args['font_name']}'"}
@@ -2294,21 +2035,22 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSExcelClient) -> st
         )
         result = {"message": f"Set borders on {args['cell_or_range']} (style={border_style})"}
 
-    # ── AutoFit / Freeze / Filter ──
-    elif name == "wps_autofit_columns":
-        client.autofit_columns(
-            args.get("sheet_name"),
-            args.get("start_col"),
-            args.get("end_col"),
-        )
-        result = {"message": "Auto-fitted column widths."}
+    # ── Freeze / Filter ──
+    elif name == "wps_autofit":
+        sheet = args.get("sheet_name")
+        if args.get("fit_type") == "rows":
+            client.autofit_rows(sheet, args.get("start"), args.get("end"))
+            result = {"message": "Auto-fitted row heights."}
+        else:
+            client.autofit_columns(sheet, args.get("start"), args.get("end"))
+            result = {"message": "Auto-fitted column widths."}
 
+    # ── Backward compat: old autofit names ──
+    elif name == "wps_autofit_columns":
+        client.autofit_columns(args.get("sheet_name"), args.get("start_col"), args.get("end_col"))
+        result = {"message": "Auto-fitted column widths."}
     elif name == "wps_autofit_rows":
-        client.autofit_rows(
-            args.get("sheet_name"),
-            args.get("start_row"),
-            args.get("end_row"),
-        )
+        client.autofit_rows(args.get("sheet_name"), args.get("start_row"), args.get("end_row"))
         result = {"message": "Auto-fitted row heights."}
 
     elif name == "wps_freeze_panes":
@@ -2540,25 +2282,40 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSExcelClient) -> st
         client.delete_conditional_format(args["range_ref"], args.get("sheet_name"))
         result = {"message": f"Removed conditional formatting from {args['range_ref']}"}
 
-    # ── Font Underline ──
     elif name == "wps_set_font_underline":
         style = args.get("underline_style", "single")
         client.set_font_underline(args["cell_or_range"], style, args.get("sheet_name"))
         result = {"message": f"Set {args['cell_or_range']} underline = {style}"}
 
     # ── Row / Column Grouping ──
+    elif name == "wps_group":
+        sheet = args.get("sheet_name")
+        if args["group_type"] == "row":
+            client.group_rows(args["start"], args["end"], sheet)
+            result = {"message": f"Grouped rows {args['start']} to {args['end']}"}
+        else:
+            client.group_columns(args["start"], args["end"], sheet)
+            result = {"message": f"Grouped columns {args['start']} to {args['end']}"}
+
+    elif name == "wps_ungroup":
+        sheet = args.get("sheet_name")
+        if args["group_type"] == "row":
+            client.ungroup_rows(args["start"], args["end"], sheet)
+            result = {"message": f"Ungrouped rows {args['start']} to {args['end']}"}
+        else:
+            client.ungroup_columns(args["start"], args["end"], sheet)
+            result = {"message": f"Ungrouped columns {args['start']} to {args['end']}"}
+
+    # ── Backward compat: old group/ungroup names ──
     elif name == "wps_group_rows":
         client.group_rows(args["start_row"], args["end_row"], args.get("sheet_name"))
         result = {"message": f"Grouped rows {args['start_row']} to {args['end_row']}"}
-
     elif name == "wps_ungroup_rows":
         client.ungroup_rows(args["start_row"], args["end_row"], args.get("sheet_name"))
         result = {"message": f"Ungrouped rows {args['start_row']} to {args['end_row']}"}
-
     elif name == "wps_group_columns":
         client.group_columns(args["start_col"], args["end_col"], args.get("sheet_name"))
         result = {"message": f"Grouped columns {args['start_col']} to {args['end_col']}"}
-
     elif name == "wps_ungroup_columns":
         client.ungroup_columns(args["start_col"], args["end_col"], args.get("sheet_name"))
         result = {"message": f"Ungrouped columns {args['start_col']} to {args['end_col']}"}

@@ -77,7 +77,7 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {},
-            "required": [],
+            "required": []
         },
     ),
     # ── Email ──
@@ -89,21 +89,18 @@ TOOLS = [
             "properties": {
                 "folder": {
                     "type": "string",
-                    "description": "Folder name: 'inbox', 'sent', 'drafts', 'deleted'. Default: 'inbox'.",
-                    "enum": ["inbox", "sent", "drafts", "deleted"],
-                    "default": "inbox",
+                    "description": "Folder: inbox/sent/drafts/deleted"
                 },
                 "count": {
                     "type": "integer",
-                    "description": "Maximum number of emails to return. Default: 50.",
-                    "default": 50,
+                    "description": "Max results"
                 },
                 "account_name": {
                     "type": "string",
-                    "description": "Optional display name of a specific email account.",
-                },
+                    "description": "Account name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -114,42 +111,38 @@ TOOLS = [
             "properties": {
                 "subject": {
                     "type": "string",
-                    "description": "Filter emails by subject containing this text.",
+                    "description": "Subject filter"
                 },
                 "sender": {
                     "type": "string",
-                    "description": "Filter emails by sender name/email containing this text.",
+                    "description": "Sender filter"
                 },
                 "received_after": {
                     "type": "string",
-                    "description": "ISO date string (e.g., '2026-01-01') for emails received after this date.",
+                    "description": "Received after (ISO date)"
                 },
                 "received_before": {
                     "type": "string",
-                    "description": "ISO date string for emails received before this date.",
+                    "description": "Received before (ISO date)"
                 },
                 "unread_only": {
                     "type": "boolean",
-                    "description": "Only return unread emails. Default: false.",
-                    "default": False,
+                    "description": "Unread only"
                 },
                 "folder": {
                     "type": "string",
-                    "description": "Folder to search: 'inbox', 'sent', 'drafts', 'deleted'. Default: 'inbox'.",
-                    "enum": ["inbox", "sent", "drafts", "deleted"],
-                    "default": "inbox",
+                    "description": "Folder: inbox/sent/drafts/deleted"
                 },
                 "count": {
                     "type": "integer",
-                    "description": "Maximum number of results. Default: 50.",
-                    "default": 50,
+                    "description": "Max results"
                 },
                 "account_name": {
                     "type": "string",
-                    "description": "Optional display name of a specific email account.",
-                },
+                    "description": "Account name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -160,10 +153,10 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the email (obtained from list or search).",
-                },
+                    "description": "Email EntryID"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     Tool(
@@ -174,41 +167,38 @@ TOOLS = [
             "properties": {
                 "to": {
                     "type": "string",
-                    "description": "Recipient email address(es), separated by semicolons.",
+                    "description": "Recipient(s), semicolon-separated"
                 },
                 "subject": {
                     "type": "string",
-                    "description": "Email subject line.",
+                    "description": "Subject"
                 },
                 "body": {
                     "type": "string",
-                    "description": "Email body text.",
+                    "description": "Body text"
                 },
                 "cc": {
                     "type": "string",
-                    "description": "CC recipients, semicolon-separated.",
+                    "description": "CC, semicolon-separated"
                 },
                 "bcc": {
                     "type": "string",
-                    "description": "BCC recipients, semicolon-separated.",
+                    "description": "BCC, semicolon-separated"
                 },
                 "html_body": {
                     "type": "boolean",
-                    "description": "If True, body is treated as HTML. Default: false.",
-                    "default": False,
+                    "description": "Body is HTML"
                 },
                 "attachments": {
                     "type": "string",
-                    "description": "JSON array of file paths to attach, e.g. ['C:\\file.pdf'].",
+                    "description": "JSON array of file paths to attach, e.g. ['C:\\file.pdf']."
                 },
                 "importance": {
                     "type": "string",
-                    "description": "Importance: 'low', 'normal', 'high'. Default: 'normal'.",
-                    "enum": ["low", "normal", "high"],
-                    "default": "normal",
-                },
+                    "description": "low/normal/high"
+                }
             },
-            "required": ["to", "subject", "body"],
+            "required": ["to", "subject", "body"]
         },
     ),
     Tool(
@@ -219,41 +209,38 @@ TOOLS = [
             "properties": {
                 "subject": {
                     "type": "string",
-                    "description": "Email subject line.",
+                    "description": "Subject"
                 },
                 "body": {
                     "type": "string",
-                    "description": "Email body text.",
+                    "description": "Body text"
                 },
                 "to": {
                     "type": "string",
-                    "description": "Recipient email address(es), separated by semicolons.",
+                    "description": "Recipient(s), semicolon-separated"
                 },
                 "cc": {
                     "type": "string",
-                    "description": "CC recipients, semicolon-separated.",
+                    "description": "CC, semicolon-separated"
                 },
                 "bcc": {
                     "type": "string",
-                    "description": "BCC recipients, semicolon-separated.",
+                    "description": "BCC, semicolon-separated"
                 },
                 "html_body": {
                     "type": "boolean",
-                    "description": "If True, body is treated as HTML. Default: false.",
-                    "default": False,
+                    "description": "Body is HTML"
                 },
                 "attachments": {
                     "type": "string",
-                    "description": "JSON array of file paths to attach, e.g. ['C:\\file.pdf'].",
+                    "description": "JSON array of file paths to attach, e.g. ['C:\\file.pdf']."
                 },
                 "importance": {
                     "type": "string",
-                    "description": "Importance: 'low', 'normal', 'high'. Default: 'normal'.",
-                    "enum": ["low", "normal", "high"],
-                    "default": "normal",
-                },
+                    "description": "low/normal/high"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -264,28 +251,26 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the email to reply to.",
+                    "description": "Email EntryID"
                 },
                 "body": {
                     "type": "string",
-                    "description": "Reply body text (added above the original message).",
+                    "description": "Reply body text"
                 },
                 "reply_all": {
                     "type": "boolean",
-                    "description": "If True, reply to all recipients. Default: false.",
-                    "default": False,
+                    "description": "Reply to all"
                 },
                 "html_body": {
                     "type": "boolean",
-                    "description": "If True, body is treated as HTML. Default: false.",
-                    "default": False,
+                    "description": "Body is HTML"
                 },
                 "attachments": {
                     "type": "string",
-                    "description": "JSON array of file paths to attach.",
-                },
+                    "description": "JSON array of file paths"
+                }
             },
-            "required": ["entry_id", "body"],
+            "required": ["entry_id", "body"]
         },
     ),
     Tool(
@@ -296,27 +281,26 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the email to forward.",
+                    "description": "Email EntryID"
                 },
                 "to": {
                     "type": "string",
-                    "description": "Recipient email address(es), semicolon-separated.",
+                    "description": "Recipient email address(es), semicolon-separated."
                 },
                 "body": {
                     "type": "string",
-                    "description": "Additional message body text.",
+                    "description": "Additional message text"
                 },
                 "html_body": {
                     "type": "boolean",
-                    "description": "If True, body is treated as HTML. Default: false.",
-                    "default": False,
+                    "description": "Body is HTML"
                 },
                 "attachments": {
                     "type": "string",
-                    "description": "JSON array of file paths to attach.",
-                },
+                    "description": "JSON array of file paths"
+                }
             },
-            "required": ["entry_id", "to"],
+            "required": ["entry_id", "to"]
         },
     ),
     Tool(
@@ -327,10 +311,10 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the email to delete.",
-                },
+                    "description": "Email EntryID"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     Tool(
@@ -341,15 +325,14 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the email.",
+                    "description": "Email EntryID"
                 },
                 "read": {
                     "type": "boolean",
-                    "description": "True to mark as read, False to mark as unread. Default: true.",
-                    "default": True,
-                },
+                    "description": "Mark read (true) or unread (false)"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     Tool(
@@ -360,15 +343,14 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the email.",
+                    "description": "Email EntryID"
                 },
                 "dest_folder": {
                     "type": "string",
-                    "description": "Destination folder: 'inbox', 'sent', 'drafts', 'deleted'.",
-                    "enum": ["inbox", "sent", "drafts", "deleted"],
-                },
+                    "description": "Dest folder: inbox/sent/drafts/deleted"
+                }
             },
-            "required": ["entry_id", "dest_folder"],
+            "required": ["entry_id", "dest_folder"]
         },
     ),
     Tool(
@@ -379,19 +361,18 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the email.",
+                    "description": "Email EntryID"
                 },
                 "attachment_index": {
                     "type": "integer",
-                    "description": "1-based index of the attachment to save. Default: 1.",
-                    "default": 1,
+                    "description": "Attachment index (1-based)"
                 },
                 "save_path": {
                     "type": "string",
-                    "description": "Directory or full file path to save to. Defaults to current directory.",
-                },
+                    "description": "Save path"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     # ── Calendar ──
@@ -403,23 +384,22 @@ TOOLS = [
             "properties": {
                 "start_date": {
                     "type": "string",
-                    "description": "ISO date string for range start (e.g., '2026-01-01'). Default: today.",
+                    "description": "Start date (ISO)"
                 },
                 "end_date": {
                     "type": "string",
-                    "description": "ISO date string for range end. Default: +30 days.",
+                    "description": "End date (ISO)"
                 },
                 "count": {
                     "type": "integer",
-                    "description": "Maximum events to return. Default: 50.",
-                    "default": 50,
+                    "description": "Max results"
                 },
                 "account_name": {
                     "type": "string",
-                    "description": "Optional display name of a specific email account.",
-                },
+                    "description": "Account name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -430,40 +410,38 @@ TOOLS = [
             "properties": {
                 "subject": {
                     "type": "string",
-                    "description": "Appointment subject/title.",
+                    "description": "Subject"
                 },
                 "start_time": {
                     "type": "string",
-                    "description": "Start time as ISO datetime string (e.g., '2026-06-11T14:00:00').",
+                    "description": "Start (ISO datetime)"
                 },
                 "end_time": {
                     "type": "string",
-                    "description": "End time as ISO datetime string (e.g., '2026-06-11T15:00:00').",
+                    "description": "End (ISO datetime)"
                 },
                 "body": {
                     "type": "string",
-                    "description": "Appointment description/notes.",
+                    "description": "Notes"
                 },
                 "location": {
                     "type": "string",
-                    "description": "Appointment location.",
+                    "description": "Location"
                 },
                 "all_day": {
                     "type": "boolean",
-                    "description": "If True, create an all-day event. Default: false.",
-                    "default": False,
+                    "description": "All-day event"
                 },
                 "reminder_minutes": {
                     "type": "integer",
-                    "description": "Minutes before to remind. 0 for no reminder. Default: 15.",
-                    "default": 15,
+                    "description": "Reminder minutes (0=none)"
                 },
                 "recipients": {
                     "type": "string",
-                    "description": "Attendees' email addresses, semicolon-separated. Sends invites if provided.",
-                },
+                    "description": "Attendees, semicolon-separated"
+                }
             },
-            "required": ["subject", "start_time", "end_time"],
+            "required": ["subject", "start_time", "end_time"]
         },
     ),
     Tool(
@@ -474,10 +452,10 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the appointment.",
-                },
+                    "description": "Appointment EntryID"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     # ── Contacts ──
@@ -489,19 +467,18 @@ TOOLS = [
             "properties": {
                 "search": {
                     "type": "string",
-                    "description": "Optional text to filter contacts by name or email.",
+                    "description": "Filter by name/email"
                 },
                 "count": {
                     "type": "integer",
-                    "description": "Maximum contacts to return. Default: 100.",
-                    "default": 100,
+                    "description": "Max results"
                 },
                 "account_name": {
                     "type": "string",
-                    "description": "Optional display name of a specific email account.",
-                },
+                    "description": "Account name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -512,30 +489,30 @@ TOOLS = [
             "properties": {
                 "full_name": {
                     "type": "string",
-                    "description": "Contact's full name.",
+                    "description": "Full name"
                 },
                 "email": {
                     "type": "string",
-                    "description": "Email address.",
+                    "description": "Email"
                 },
                 "phone": {
                     "type": "string",
-                    "description": "Business phone number.",
+                    "description": "Phone"
                 },
                 "mobile": {
                     "type": "string",
-                    "description": "Mobile phone number.",
+                    "description": "Mobile"
                 },
                 "company": {
                     "type": "string",
-                    "description": "Company name.",
+                    "description": "Company"
                 },
                 "job_title": {
                     "type": "string",
-                    "description": "Job title.",
-                },
+                    "description": "Job title"
+                }
             },
-            "required": ["full_name"],
+            "required": ["full_name"]
         },
     ),
     Tool(
@@ -546,10 +523,10 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the contact.",
-                },
+                    "description": "Contact EntryID"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     # ── Calendar: Detail / Update / Respond ──
@@ -561,10 +538,10 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the appointment.",
-                },
+                    "description": "Appointment EntryID"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     Tool(
@@ -575,47 +552,46 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the appointment.",
+                    "description": "Appointment EntryID"
                 },
                 "subject": {
                     "type": "string",
-                    "description": "New subject.",
+                    "description": "Subject"
                 },
                 "start_time": {
                     "type": "string",
-                    "description": "New start time as ISO datetime string.",
+                    "description": "Start (ISO datetime)"
                 },
                 "end_time": {
                     "type": "string",
-                    "description": "New end time as ISO datetime string.",
+                    "description": "End (ISO datetime)"
                 },
                 "body": {
                     "type": "string",
-                    "description": "New body/notes text.",
+                    "description": "Notes"
                 },
                 "location": {
                     "type": "string",
-                    "description": "New location.",
+                    "description": "Location"
                 },
                 "all_day": {
                     "type": "boolean",
-                    "description": "Set all-day event.",
+                    "description": "All-day event"
                 },
                 "reminder_minutes": {
                     "type": "integer",
-                    "description": "Minutes before to remind (0 for none).",
+                    "description": "Reminder minutes (0=none)"
                 },
                 "recipients": {
                     "type": "string",
-                    "description": "Updated attendees (semicolon-separated emails).",
+                    "description": "Attendees, semicolon-separated"
                 },
                 "send_update": {
                     "type": "boolean",
-                    "description": "If True, send update to attendees. Default: false.",
-                    "default": False,
-                },
+                    "description": "Send update to attendees"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     Tool(
@@ -626,19 +602,18 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the meeting request or appointment.",
+                    "description": "Meeting EntryID"
                 },
                 "response": {
                     "type": "string",
-                    "description": "Response: 'accept', 'decline', or 'tentative'.",
-                    "enum": ["accept", "decline", "tentative"],
+                    "description": "accept/decline/tentative"
                 },
                 "comment": {
                     "type": "string",
-                    "description": "Optional message to include with the response.",
-                },
+                    "description": "Response comment"
+                }
             },
-            "required": ["entry_id", "response"],
+            "required": ["entry_id", "response"]
         },
     ),
     Tool(
@@ -649,19 +624,18 @@ TOOLS = [
             "properties": {
                 "start_date": {
                     "type": "string",
-                    "description": "ISO date string for range start. Default: today.",
+                    "description": "Start date (ISO)"
                 },
                 "months": {
                     "type": "integer",
-                    "description": "Number of months to query. Default: 1.",
-                    "default": 1,
+                    "description": "Months"
                 },
                 "account_name": {
                     "type": "string",
-                    "description": "Optional display name of a specific email account.",
-                },
+                    "description": "Account name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     # ── Contacts: Update / Export ──
@@ -673,38 +647,38 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the contact.",
+                    "description": "Contact EntryID"
                 },
                 "full_name": {
                     "type": "string",
-                    "description": "New full name.",
+                    "description": "Full name"
                 },
                 "email": {
                     "type": "string",
-                    "description": "New email address.",
+                    "description": "Email"
                 },
                 "phone": {
                     "type": "string",
-                    "description": "New business phone number.",
+                    "description": "Phone"
                 },
                 "mobile": {
                     "type": "string",
-                    "description": "New mobile phone number.",
+                    "description": "Mobile"
                 },
                 "home_phone": {
                     "type": "string",
-                    "description": "New home phone number.",
+                    "description": "Home phone"
                 },
                 "company": {
                     "type": "string",
-                    "description": "New company name.",
+                    "description": "Company"
                 },
                 "job_title": {
                     "type": "string",
-                    "description": "New job title.",
-                },
+                    "description": "Job title"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     Tool(
@@ -715,20 +689,18 @@ TOOLS = [
             "properties": {
                 "format": {
                     "type": "string",
-                    "description": "Export format: 'csv' or 'vcard'. Default: 'csv'.",
-                    "enum": ["csv", "vcard"],
-                    "default": "csv",
+                    "description": "csv/vcard"
                 },
                 "save_path": {
                     "type": "string",
-                    "description": "Directory to save the file. Default: current directory.",
+                    "description": "Save path"
                 },
                 "account_name": {
                     "type": "string",
-                    "description": "Optional display name of a specific email account.",
-                },
+                    "description": "Account name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     # ── Email: Flag / Categorize / Empty / Open ──
@@ -740,23 +712,22 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the email.",
+                    "description": "Email EntryID"
                 },
                 "flag": {
                     "type": "boolean",
-                    "description": "True to flag, False to remove flag. Default: true.",
-                    "default": True,
+                    "description": "Flag on/off"
                 },
                 "due_date": {
                     "type": "string",
-                    "description": "ISO date string for the flag due date.",
+                    "description": "Due date (ISO)"
                 },
                 "reminder_date": {
                     "type": "string",
-                    "description": "ISO datetime string for a reminder.",
-                },
+                    "description": "Reminder (ISO datetime)"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     Tool(
@@ -767,20 +738,18 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the email.",
+                    "description": "Email EntryID"
                 },
                 "categories": {
                     "type": "string",
-                    "description": "Category name(s), semicolon-separated.",
+                    "description": "Categories, semicolon-separated"
                 },
                 "action": {
                     "type": "string",
-                    "description": "Action: 'set' (replace), 'add' (append), 'remove' (remove specific), 'clear' (remove all). Default: 'set'.",
-                    "enum": ["set", "add", "remove", "clear"],
-                    "default": "set",
-                },
+                    "description": "set/add/remove/clear"
+                }
             },
-            "required": ["entry_id", "categories"],
+            "required": ["entry_id", "categories"]
         },
     ),
     Tool(
@@ -791,10 +760,10 @@ TOOLS = [
             "properties": {
                 "account_name": {
                     "type": "string",
-                    "description": "Optional display name of a specific email account.",
-                },
+                    "description": "Account name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -805,10 +774,10 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the email to open.",
-                },
+                    "description": "Email EntryID"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     # ── Draft Management ──
@@ -820,44 +789,42 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the draft.",
+                    "description": "Draft EntryID"
                 },
                 "subject": {
                     "type": "string",
-                    "description": "New subject.",
+                    "description": "Subject"
                 },
                 "body": {
                     "type": "string",
-                    "description": "New body text.",
+                    "description": "Body text"
                 },
                 "to": {
                     "type": "string",
-                    "description": "New recipients (semicolon-separated).",
+                    "description": "Recipients, semicolon-separated"
                 },
                 "cc": {
                     "type": "string",
-                    "description": "New CC recipients.",
+                    "description": "CC, semicolon-separated"
                 },
                 "bcc": {
                     "type": "string",
-                    "description": "New BCC recipients.",
+                    "description": "BCC, semicolon-separated"
                 },
                 "html_body": {
                     "type": "boolean",
-                    "description": "If True, treat body as HTML. Default: false.",
-                    "default": False,
+                    "description": "If True, treat body as HTML. Default: false."
                 },
                 "attachments": {
                     "type": "string",
-                    "description": "JSON array of additional file paths to attach.",
+                    "description": "JSON array of file paths"
                 },
                 "importance": {
                     "type": "string",
-                    "description": "Importance: 'low', 'normal', 'high'.",
-                    "enum": ["low", "normal", "high"],
-                },
+                    "description": "low/normal/high"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     Tool(
@@ -868,10 +835,10 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the draft to send.",
-                },
+                    "description": "Draft EntryID"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     # ── Tasks ──
@@ -883,20 +850,18 @@ TOOLS = [
             "properties": {
                 "count": {
                     "type": "integer",
-                    "description": "Maximum tasks to return. Default: 50.",
-                    "default": 50,
+                    "description": "Max results"
                 },
                 "include_completed": {
                     "type": "boolean",
-                    "description": "Include completed tasks. Default: false.",
-                    "default": False,
+                    "description": "Include completed tasks"
                 },
                 "account_name": {
                     "type": "string",
-                    "description": "Optional display name of a specific email account.",
-                },
+                    "description": "Account name"
+                }
             },
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -907,33 +872,30 @@ TOOLS = [
             "properties": {
                 "subject": {
                     "type": "string",
-                    "description": "Task subject/title.",
+                    "description": "Subject"
                 },
                 "body": {
                     "type": "string",
-                    "description": "Task body/notes.",
+                    "description": "Notes"
                 },
                 "due_date": {
                     "type": "string",
-                    "description": "ISO date string for due date.",
+                    "description": "Due date (ISO)"
                 },
                 "start_date": {
                     "type": "string",
-                    "description": "ISO date string for start date.",
+                    "description": "Start date (ISO)"
                 },
                 "importance": {
                     "type": "string",
-                    "description": "Importance: 'low', 'normal', 'high'. Default: 'normal'.",
-                    "enum": ["low", "normal", "high"],
-                    "default": "normal",
+                    "description": "low/normal/high"
                 },
                 "reminder_minutes": {
                     "type": "integer",
-                    "description": "Minutes before due to remind (0 for none). Default: 0.",
-                    "default": 0,
-                },
+                    "description": "Reminder minutes (0=none)"
+                }
             },
-            "required": ["subject"],
+            "required": ["subject"]
         },
     ),
     Tool(
@@ -944,43 +906,42 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the task.",
+                    "description": "Task EntryID"
                 },
                 "subject": {
                     "type": "string",
-                    "description": "New subject.",
+                    "description": "Subject"
                 },
                 "body": {
                     "type": "string",
-                    "description": "New body/notes.",
+                    "description": "Notes"
                 },
                 "due_date": {
                     "type": "string",
-                    "description": "New due date (ISO date string).",
+                    "description": "Due date (ISO)"
                 },
                 "start_date": {
                     "type": "string",
-                    "description": "New start date (ISO date string).",
+                    "description": "Start date (ISO)"
                 },
                 "status": {
                     "type": "integer",
-                    "description": "0=NotStarted, 1=InProgress, 2=Complete, 3=Waiting, 4=Deferred.",
+                    "description": "0=NotStarted,1=InProgress,2=Complete,3=Waiting,4=Deferred"
                 },
                 "importance": {
                     "type": "string",
-                    "description": "Importance: 'low', 'normal', 'high'.",
-                    "enum": ["low", "normal", "high"],
+                    "description": "low/normal/high"
                 },
                 "reminder_minutes": {
                     "type": "integer",
-                    "description": "Minutes before due to remind (0 for none).",
+                    "description": "Minutes before due to remind (0 for none)."
                 },
                 "percent_complete": {
                     "type": "integer",
-                    "description": "Completion percentage (0-100).",
-                },
+                    "description": "Percent complete (0-100)"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     Tool(
@@ -991,10 +952,10 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the task.",
-                },
+                    "description": "Task EntryID"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     Tool(
@@ -1005,15 +966,14 @@ TOOLS = [
             "properties": {
                 "entry_id": {
                     "type": "string",
-                    "description": "The Outlook EntryID of the task.",
+                    "description": "Task EntryID"
                 },
                 "complete": {
                     "type": "boolean",
-                    "description": "True to mark complete, False to mark not started. Default: true.",
-                    "default": True,
-                },
+                    "description": "Complete (true) or not started (false)"
+                }
             },
-            "required": ["entry_id"],
+            "required": ["entry_id"]
         },
     ),
     # ── Rules ──
@@ -1023,7 +983,7 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {},
-            "required": [],
+            "required": []
         },
     ),
     Tool(
@@ -1034,40 +994,36 @@ TOOLS = [
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Rule name.",
+                    "description": "Rule name"
                 },
                 "condition_type": {
                     "type": "string",
-                    "description": "Condition: 'sender' (by email) or 'subject' (by keyword). Default: 'sender'.",
-                    "enum": ["sender", "subject"],
-                    "default": "sender",
+                    "description": "sender/subject"
                 },
                 "condition_value": {
                     "type": "string",
-                    "description": "Value for the condition (email address or subject keyword).",
+                    "description": "Email or keyword"
                 },
                 "action_type": {
                     "type": "string",
-                    "description": "Action: 'move', 'mark_read', 'delete', or 'categorize'.",
-                    "enum": ["move", "mark_read", "delete", "categorize"],
+                    "description": "move/mark_read/delete/categorize"
                 },
                 "action_value": {
                     "type": "string",
-                    "description": "Target folder name (for 'move') or category name (for 'categorize').",
+                    "description": "Folder or category name"
                 },
                 "enabled": {
                     "type": "boolean",
-                    "description": "Whether the rule is enabled. Default: true.",
-                    "default": True,
+                    "description": "Rule enabled"
                 },
                 "account_name": {
                     "type": "string",
-                    "description": "Optional display name of a specific email account.",
-                },
+                    "description": "Account name"
+                }
             },
-            "required": ["name", "condition_value", "action_type"],
+            "required": ["name", "condition_value", "action_type"]
         },
-    ),
+    )
 ]
 
 # ── Folder Mappings ────────────────────────────────────────────────────
@@ -1076,13 +1032,13 @@ FOLDER_MAP = {
     "inbox": OutlookClient.OL_FOLDER_INBOX,
     "sent": OutlookClient.OL_FOLDER_SENT,
     "drafts": OutlookClient.OL_FOLDER_DRAFTS,
-    "deleted": OutlookClient.OL_FOLDER_DELETED,
+    "deleted": OutlookClient.OL_FOLDER_DELETED
 }
 
 IMPORTANCE_MAP = {
     "low": OutlookClient.IMPORTANCE_LOW,
     "normal": OutlookClient.IMPORTANCE_NORMAL,
-    "high": OutlookClient.IMPORTANCE_HIGH,
+    "high": OutlookClient.IMPORTANCE_HIGH
 }
 
 
@@ -1114,7 +1070,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         logger.exception(f"Error executing tool '{name}'")
         return [TextContent(type="text", text=json.dumps({
             "error": str(e),
-            "tool": name,
+            "tool": name
         }, ensure_ascii=False))]
 
 
