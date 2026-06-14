@@ -85,15 +85,15 @@ TOOLS: list[Tool] = [
             "properties": {
                 "action": {
                     "type": "string",
-                    "description": "Action: list, search, get, send, create_draft, reply, forward, delete, move, mark_read, flag, categorize, save_attachment, empty_deleted, open, update_draft, send_draft",
-                    "enum": ["list", "search", "get", "send", "create_draft", "reply", "forward", "delete", "move", "mark_read", "flag", "categorize", "save_attachment", "empty_deleted", "open", "update_draft", "send_draft"],
+                    "description": "Action: list, search, get, create_draft, delete, move, mark_read, flag, categorize, save_attachment, empty_deleted, open, update_draft",
+                    "enum": ["list", "search", "get", "create_draft", "delete", "move", "mark_read", "flag", "categorize", "save_attachment", "empty_deleted", "open", "update_draft"],
                 },
                 "folder": {"type": "string", "description": "Folder: inbox/sent/drafts/deleted (default: inbox)"},
                 "count": {"type": "integer", "description": "Max results (default: 20)"},
                 "offset": {"type": "integer", "description": "Skip first N results for pagination (default: 0)"},
                 "fields": {"type": "string", "description": "Comma-separated fields to return (e.g. 'subject,sender_name,received_time'). Omit for compact summary."},
                 "account_name": {"type": "string", "description": "Account name"},
-                "entry_id": {"type": "string", "description": "Email/Draft EntryID for get/send_draft/update_draft/forward/reply/move/mark_read/flag/categorize/delete/save_attachment/open"},
+                "entry_id": {"type": "string", "description": "Email/Draft EntryID for get/update_draft/move/mark_read/flag/categorize/delete/save_attachment/open"},
                 "subject": {"type": "string", "description": "Subject filter (search) or email subject"},
                 "sender": {"type": "string", "description": "Sender filter (search)"},
                 "received_after": {"type": "string", "description": "Received after ISO date (search)"},
@@ -106,7 +106,6 @@ TOOLS: list[Tool] = [
                 "html_body": {"type": "boolean", "description": "Treat body as HTML"},
                 "attachments": {"type": "string", "description": "JSON array of file paths"},
                 "importance": {"type": "string", "description": "low/normal/high"},
-                "reply_all": {"type": "boolean", "description": "Reply to all (reply action)"},
                 "dest_folder": {"type": "string", "description": "Destination folder: inbox/sent/drafts/deleted (move)"},
                 "read": {"type": "boolean", "description": "Mark read (true) or unread (false)"},
                 "flag": {"type": "boolean", "description": "Flag on/off (flag action)"},
@@ -338,30 +337,12 @@ def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str
                 )}
         elif action == "get":
             result = client.get_email_by_id(args["entry_id"])
-        elif action == "send":
-            result = client.send_email(
-                to=args["to"], subject=args.get("subject", ""), body=args.get("body", ""),
-                cc=args.get("cc", ""), bcc=args.get("bcc", ""),
-                attachments=_parse_attachments(args), html_body=args.get("html_body", False),
-                importance=IMPORTANCE_MAP.get(args.get("importance", "normal"), 1),
-            )
         elif action == "create_draft":
             result = client.create_draft(
                 to=args.get("to", ""), subject=args.get("subject", ""), body=args.get("body", ""),
                 cc=args.get("cc", ""), bcc=args.get("bcc", ""),
                 attachments=_parse_attachments(args), html_body=args.get("html_body", False),
                 importance=IMPORTANCE_MAP.get(args.get("importance", "normal"), 1),
-            )
-        elif action == "reply":
-            result = client.reply_email(
-                entry_id=args["entry_id"], body=args.get("body", ""),
-                reply_all=args.get("reply_all", False), html_body=args.get("html_body", False),
-                attachments=_parse_attachments(args),
-            )
-        elif action == "forward":
-            result = client.forward_email(
-                entry_id=args["entry_id"], to=args.get("to", ""), body=args.get("body", ""),
-                html_body=args.get("html_body", False), attachments=_parse_attachments(args),
             )
         elif action == "delete":
             result = client.delete_email(args["entry_id"])
@@ -387,9 +368,6 @@ def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str
                 html_body=args.get("html_body", False), attachments=_parse_attachments(args),
                 importance=IMPORTANCE_MAP.get(args.get("importance"), None),
             )
-        elif action == "send_draft":
-            result = client.send_draft(args["entry_id"])
-
     # ── 3. Calendar ──
     elif name == "outlook_calendar":
         action = args["action"]

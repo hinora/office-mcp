@@ -229,60 +229,6 @@ class OutlookClient:
 
         return result
 
-    def send_email(
-        self,
-        to: str,
-        subject: str = "",
-        body: str = "",
-        cc: str = "",
-        bcc: str = "",
-        attachments: list[str] | None = None,
-        html_body: bool = False,
-        importance: int = IMPORTANCE_NORMAL,
-    ) -> dict[str, Any]:
-        """
-        Send a new email.
-
-        Args:
-            to: Recipient email(s), semicolon-separated.
-            subject: Email subject.
-            body: Email body text.
-            cc: CC recipients.
-            bcc: BCC recipients.
-            attachments: List of file paths to attach.
-            html_body: If True, treat body as HTML.
-            importance: Importance level (0=Low, 1=Normal, 2=High).
-
-        Returns:
-            Dict with sent email info.
-        """
-        mail = self.app.CreateItem(0)  # 0 = olMailItem
-        mail.To = to
-        mail.Subject = subject
-        if html_body:
-            mail.HTMLBody = body
-        else:
-            mail.Body = body
-        if cc:
-            mail.CC = cc
-        if bcc:
-            mail.BCC = bcc
-        mail.Importance = importance
-
-        if attachments:
-            for filepath in attachments:
-                full_path = os.path.abspath(filepath)
-                if os.path.exists(full_path):
-                    mail.Attachments.Add(full_path)
-
-        mail.Send()
-
-        return {
-            "message": "Email sent successfully.",
-            "to": to,
-            "subject": subject,
-        }
-
     def create_draft(
         self,
         subject: str = "",
@@ -338,95 +284,6 @@ class OutlookClient:
             "entry_id": mail.EntryID,
             "to": to,
             "subject": subject,
-        }
-
-    def reply_email(
-        self,
-        entry_id: str,
-        body: str = "",
-        reply_all: bool = False,
-        html_body: bool = False,
-        attachments: list[str] | None = None,
-    ) -> dict[str, Any]:
-        """
-        Reply to an email identified by its EntryID.
-
-        Args:
-            entry_id: The Outlook EntryID of the email to reply to.
-            body: Reply body text.
-            reply_all: If True, use ReplyAll instead of Reply.
-            html_body: If True, treat body as HTML.
-            attachments: List of file paths to attach.
-
-        Returns:
-            Dict with reply info.
-        """
-        original = self.namespace.GetItemFromID(entry_id)
-        if reply_all:
-            reply = original.ReplyAll()
-        else:
-            reply = original.Reply()
-
-        if html_body:
-            reply.HTMLBody = body + reply.HTMLBody if body else reply.HTMLBody
-        elif body:
-            reply.Body = body + "\n\n" + reply.Body
-
-        if attachments:
-            for filepath in attachments:
-                full_path = os.path.abspath(filepath)
-                if os.path.exists(full_path):
-                    reply.Attachments.Add(full_path)
-
-        reply.Send()
-
-        return {
-            "message": "Reply sent successfully.",
-            "original_subject": original.Subject,
-        }
-
-    def forward_email(
-        self,
-        entry_id: str,
-        to: str,
-        body: str = "",
-        html_body: bool = False,
-        attachments: list[str] | None = None,
-    ) -> dict[str, Any]:
-        """
-        Forward an email to new recipients.
-
-        Args:
-            entry_id: The Outlook EntryID of the email to forward.
-            to: Recipient email(s).
-            body: Additional body text.
-            html_body: If True, treat body as HTML.
-            attachments: List of file paths to attach.
-
-        Returns:
-            Dict with forward info.
-        """
-        original = self.namespace.GetItemFromID(entry_id)
-        forward = original.Forward()
-        forward.To = to
-
-        if html_body:
-            forward.HTMLBody = body + forward.HTMLBody if body else forward.HTMLBody
-        elif body:
-            forward.Body = body + "\n\n" + forward.Body
-
-        if attachments:
-            for filepath in attachments:
-                full_path = os.path.abspath(filepath)
-                if os.path.exists(full_path):
-                    forward.Attachments.Add(full_path)
-
-        forward.Send()
-
-        return {
-            "message": "Email forwarded successfully.",
-            "to": to,
-            "original_subject": original.Subject,
         }
 
     def delete_email(self, entry_id: str) -> dict[str, Any]:
@@ -1375,22 +1232,6 @@ class OutlookClient:
             "subject": draft.Subject,
             "changed_fields": changed,
         }
-
-    def send_draft(self, entry_id: str) -> dict[str, Any]:
-        """Send an existing draft email.
-
-        Args:
-            entry_id: The Outlook EntryID of the draft to send.
-
-        Returns:
-            Dict with send result.
-        """
-        draft = self.namespace.GetItemFromID(entry_id)
-        if draft.Class != 43:
-            raise ValueError(f"Item is not an email (class={draft.Class}).")
-        subject = draft.Subject
-        draft.Send()
-        return {"message": f"Draft sent: '{subject}'.", "subject": subject}
 
     # ── Tasks ────────────────────────────────────────────────────────
 
