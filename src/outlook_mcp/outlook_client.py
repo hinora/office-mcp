@@ -109,7 +109,9 @@ class OutlookClient:
     def list_emails(
         self,
         folder_type: int = OL_FOLDER_INBOX,
-        count: int = 50,
+        count: int = 20,
+        offset: int = 0,
+        fields: str | None = None,
         account_name: str | None = None,
     ) -> list[dict[str, Any]]:
         """
@@ -117,23 +119,29 @@ class OutlookClient:
 
         Args:
             folder_type: The Outlook folder constant (default: Inbox).
-            count: Maximum number of emails to return.
+            count: Maximum number of emails to return (default: 20).
+            offset: Number of emails to skip (for pagination).
+            fields: Comma-separated field names to include (e.g. "subject,sender_name").
+                    When omitted, returns a compact summary.
             account_name: Optional account display name to target a specific account.
 
         Returns:
-            List of email dicts with subject, sender, received time, etc.
+            List of compact email summary dicts.
         """
         folder = self._get_folder(folder_type, account_name)
         items = folder.Items
         items.Sort("[ReceivedTime]", True)  # Sort descending
 
         result = []
-        for i in range(1, min(count + 1, items.Count + 1)):
+        start = 1 + offset
+        end = min(start + count, items.Count + 1)
+        for i in range(start, end):
             try:
                 item = items.Item(i)
                 # Only process MailItem (class 43)
                 if item.Class == 43:
-                    result.append(self._mail_to_dict(item))
+                    d = self._mail_to_summary(item)
+                    result.append(self._filter_fields(d, fields))
             except Exception:
                 continue
 
@@ -143,7 +151,9 @@ class OutlookClient:
         self,
         query: str = "",
         folder_type: int = OL_FOLDER_INBOX,
-        count: int = 50,
+        count: int = 20,
+        offset: int = 0,
+        fields: str | None = None,
         subject: str | None = None,
         sender: str | None = None,
         received_after: str | None = None,
@@ -157,7 +167,9 @@ class OutlookClient:
         Args:
             query: DASL filter string (advanced). If empty, builds from other filters.
             folder_type: Folder to search in (default: Inbox).
-            count: Maximum results.
+            count: Maximum results (default: 20).
+            offset: Number of results to skip (for pagination).
+            fields: Comma-separated field names to include. When omitted, returns a compact summary.
             subject: Filter by subject containing this text.
             sender: Filter by sender name/email containing this text.
             received_after: ISO date string (e.g., '2026-01-01').
@@ -166,7 +178,7 @@ class OutlookClient:
             account_name: Optional account display name.
 
         Returns:
-            List of matching email dicts.
+            List of matching compact email summary dicts.
         """
         folder = self._get_folder(folder_type, account_name)
         items = folder.Items
@@ -204,11 +216,14 @@ class OutlookClient:
         filtered.Sort("[ReceivedTime]", True)
 
         result = []
-        for i in range(1, min(count + 1, filtered.Count + 1)):
+        start = 1 + offset
+        end = min(start + count, filtered.Count + 1)
+        for i in range(start, end):
             try:
                 item = filtered.Item(i)
                 if item.Class == 43:
-                    result.append(self._mail_to_dict(item))
+                    d = self._mail_to_summary(item)
+                    result.append(self._filter_fields(d, fields))
             except Exception:
                 continue
 
@@ -522,7 +537,9 @@ class OutlookClient:
         self,
         start_date: str | None = None,
         end_date: str | None = None,
-        count: int = 50,
+        count: int = 20,
+        offset: int = 0,
+        fields: str | None = None,
         account_name: str | None = None,
     ) -> list[dict[str, Any]]:
         """
@@ -531,11 +548,13 @@ class OutlookClient:
         Args:
             start_date: ISO date string for range start (default: today).
             end_date: ISO date string for range end (default: +30 days).
-            count: Maximum events to return.
+            count: Maximum events to return (default: 20).
+            offset: Number of events to skip (for pagination).
+            fields: Comma-separated field names to include. When omitted, returns a compact summary.
             account_name: Optional account display name.
 
         Returns:
-            List of event dicts.
+            List of compact event summary dicts (no body).
         """
         folder = self._get_folder(self.OL_FOLDER_CALENDAR, account_name)
         items = folder.Items
@@ -559,11 +578,14 @@ class OutlookClient:
             filtered = items
 
         result = []
-        for i in range(1, min(count + 1, filtered.Count + 1)):
+        start = 1 + offset
+        end = min(start + count, filtered.Count + 1)
+        for i in range(start, end):
             try:
                 item = filtered.Item(i)
                 if item.Class == 26:  # olAppointment
-                    result.append(self._appointment_to_dict(item))
+                    d = self._appointment_to_summary(item)
+                    result.append(self._filter_fields(d, fields))
             except Exception:
                 continue
 
@@ -650,7 +672,9 @@ class OutlookClient:
 
     def list_contacts(
         self,
-        count: int = 100,
+        count: int = 50,
+        offset: int = 0,
+        fields: str | None = None,
         search: str = "",
         account_name: str | None = None,
     ) -> list[dict[str, Any]]:
@@ -658,12 +682,14 @@ class OutlookClient:
         List contacts.
 
         Args:
-            count: Maximum contacts to return.
+            count: Maximum contacts to return (default: 50).
+            offset: Number of contacts to skip (for pagination).
+            fields: Comma-separated field names to include. When omitted, returns a compact summary.
             search: Optional text to filter contacts (searches name and email).
             account_name: Optional account display name.
 
         Returns:
-            List of contact dicts.
+            List of compact contact summary dicts.
         """
         folder = self._get_folder(self.OL_FOLDER_CONTACTS, account_name)
         items = folder.Items
@@ -681,15 +707,25 @@ class OutlookClient:
         items.Sort("[FullName]")
 
         result = []
-        for i in range(1, min(count + 1, items.Count + 1)):
+        start = 1 + offset
+        end = min(start + count, items.Count + 1)
+        for i in range(start, end):
             try:
                 item = items.Item(i)
                 if item.Class == 40:  # olContact
-                    result.append(self._contact_to_dict(item))
+                    d = self._contact_to_summary(item)
+                    result.append(self._filter_fields(d, fields))
             except Exception:
                 continue
 
         return result
+
+    def get_contact_by_id(self, entry_id: str) -> dict[str, Any]:
+        """Get full contact details by EntryID."""
+        item = self.namespace.GetItemFromID(entry_id)
+        if item.Class != 40:
+            raise ValueError(f"Item is not a contact (class={item.Class}).")
+        return self._contact_to_dict(item)
 
     def create_contact(
         self,
@@ -1360,19 +1396,23 @@ class OutlookClient:
 
     def list_tasks(
         self,
-        count: int = 50,
+        count: int = 20,
+        offset: int = 0,
+        fields: str | None = None,
         include_completed: bool = False,
         account_name: str | None = None,
     ) -> list[dict[str, Any]]:
         """List tasks from the Outlook Tasks folder.
 
         Args:
-            count: Maximum tasks to return.
+            count: Maximum tasks to return (default: 20).
+            offset: Number of tasks to skip (for pagination).
+            fields: Comma-separated field names to include. When omitted, returns a compact summary.
             include_completed: If True, include completed tasks.
             account_name: Optional account display name.
 
         Returns:
-            List of task dicts.
+            List of compact task summary dicts (no body).
         """
         folder = self._get_folder(self.OL_FOLDER_TASKS, account_name)
         items = folder.Items
@@ -1385,15 +1425,25 @@ class OutlookClient:
                 pass
 
         result = []
-        for i in range(1, min(count + 1, items.Count + 1)):
+        start = 1 + offset
+        end = min(start + count, items.Count + 1)
+        for i in range(start, end):
             try:
                 item = items.Item(i)
                 if item.Class == 48:  # olTask
-                    result.append(self._task_to_dict(item))
+                    d = self._task_to_summary(item)
+                    result.append(self._filter_fields(d, fields))
             except Exception:
                 continue
 
         return result
+
+    def get_task_by_id(self, entry_id: str) -> dict[str, Any]:
+        """Get full task details by EntryID."""
+        item = self.namespace.GetItemFromID(entry_id)
+        if item.Class != 48:
+            raise ValueError(f"Item is not a task (class={item.Class}).")
+        return self._task_to_dict(item)
 
     def create_task(
         self,
@@ -1690,6 +1740,38 @@ class OutlookClient:
 
     # ── Helpers ──────────────────────────────────────────────────────
 
+    @staticmethod
+    def _strip_falsy(d: dict[str, Any]) -> dict[str, Any]:
+        """Remove empty strings and None values to shrink serialized payload."""
+        return {k: v for k, v in d.items() if v != "" and v is not None}
+
+    @staticmethod
+    def _filter_fields(d: dict[str, Any], fields: str | None) -> dict[str, Any]:
+        """Filter dict to only include requested fields (comma-separated).
+
+        If *fields* is None or empty, return the dict unchanged.
+        """
+        if not fields:
+            return d
+        allowed = set(f.strip() for f in fields.split(","))
+        return {k: v for k, v in d.items() if k in allowed}
+
+    def _mail_to_summary(self, item: Any) -> dict[str, Any]:
+        """Convert a MailItem to a compact summary dict (no body, no attachment list)."""
+        result: dict[str, Any] = {
+            "entry_id": item.EntryID,
+            "subject": item.Subject,
+            "sender_name": item.SenderName,
+            "received_time": str(item.ReceivedTime),
+            "unread": item.UnRead,
+            "importance": item.Importance,
+            "has_attachments": item.Attachments.Count > 0,
+            "attachment_count": item.Attachments.Count,
+            "categories": item.Categories or "",
+            "flag_status": item.FlagStatus,
+        }
+        return self._strip_falsy(result)
+
     def _mail_to_dict(self, item: Any, include_body: bool = False) -> dict[str, Any]:
         """Convert a MailItem COM object to a dict."""
         result: dict[str, Any] = {
@@ -1747,6 +1829,20 @@ class OutlookClient:
 
         return result
 
+    def _appointment_to_summary(self, item: Any) -> dict[str, Any]:
+        """Convert an AppointmentItem to a compact summary dict (no body)."""
+        result: dict[str, Any] = {
+            "entry_id": item.EntryID,
+            "subject": item.Subject,
+            "start": str(item.Start),
+            "end": str(item.End),
+            "duration_minutes": item.Duration,
+            "location": item.Location or "",
+            "all_day": item.AllDayEvent,
+            "organizer": item.Organizer or "",
+        }
+        return self._strip_falsy(result)
+
     def _appointment_to_dict(self, item: Any) -> dict[str, Any]:
         """Convert an AppointmentItem COM object to a dict."""
         response_map = {0: "None", 1: "Organized", 2: "Tentative", 3: "Accepted", 4: "Declined", 5: "NotResponded"}
@@ -1766,6 +1862,17 @@ class OutlookClient:
             "meeting_status": meeting_status_map.get(item.MeetingStatus, f"Unknown ({item.MeetingStatus})"),
         }
 
+    def _contact_to_summary(self, item: Any) -> dict[str, Any]:
+        """Convert a ContactItem to a compact summary dict."""
+        result: dict[str, Any] = {
+            "entry_id": item.EntryID,
+            "full_name": item.FullName or "",
+            "email": item.Email1Address or "",
+            "company": item.CompanyName or "",
+            "job_title": item.JobTitle or "",
+        }
+        return self._strip_falsy(result)
+
     def _contact_to_dict(self, item: Any) -> dict[str, Any]:
         """Convert a ContactItem COM object to a dict."""
         return {
@@ -1781,6 +1888,21 @@ class OutlookClient:
             "company": item.CompanyName or "",
             "job_title": item.JobTitle or "",
         }
+
+    def _task_to_summary(self, item: Any) -> dict[str, Any]:
+        """Convert a TaskItem to a compact summary dict (no body)."""
+        status_map = {0: "Not Started", 1: "In Progress", 2: "Complete", 3: "Waiting", 4: "Deferred"}
+        result: dict[str, Any] = {
+            "entry_id": item.EntryID,
+            "subject": item.Subject,
+            "due_date": str(item.DueDate) if item.DueDate else "",
+            "start_date": str(item.StartDate) if item.StartDate else "",
+            "status": status_map.get(item.Status, f"Unknown ({item.Status})"),
+            "importance": item.Importance,
+            "percent_complete": item.PercentComplete,
+            "categories": item.Categories or "",
+        }
+        return self._strip_falsy(result)
 
     def _task_to_dict(self, item: Any) -> dict[str, Any]:
         """Convert a TaskItem COM object to a dict."""

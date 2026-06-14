@@ -89,7 +89,9 @@ TOOLS: list[Tool] = [
                     "enum": ["list", "search", "get", "send", "create_draft", "reply", "forward", "delete", "move", "mark_read", "flag", "categorize", "save_attachment", "empty_deleted", "open", "update_draft", "send_draft"],
                 },
                 "folder": {"type": "string", "description": "Folder: inbox/sent/drafts/deleted (default: inbox)"},
-                "count": {"type": "integer", "description": "Max results (default: 50)"},
+                "count": {"type": "integer", "description": "Max results (default: 20)"},
+                "offset": {"type": "integer", "description": "Skip first N results for pagination (default: 0)"},
+                "fields": {"type": "string", "description": "Comma-separated fields to return (e.g. 'subject,sender_name,received_time'). Omit for compact summary."},
                 "account_name": {"type": "string", "description": "Account name"},
                 "entry_id": {"type": "string", "description": "Email/Draft EntryID for get/send_draft/update_draft/forward/reply/move/mark_read/flag/categorize/delete/save_attachment/open"},
                 "subject": {"type": "string", "description": "Subject filter (search) or email subject"},
@@ -133,7 +135,9 @@ TOOLS: list[Tool] = [
                 "entry_id": {"type": "string", "description": "Appointment EntryID (get/update/delete/respond)"},
                 "start_date": {"type": "string", "description": "Start date ISO (list/freebusy)"},
                 "end_date": {"type": "string", "description": "End date ISO (list)"},
-                "count": {"type": "integer", "description": "Max results (list, default: 50)"},
+                "count": {"type": "integer", "description": "Max results (list, default: 20)"},
+                "offset": {"type": "integer", "description": "Skip first N results for pagination (list, default: 0)"},
+                "fields": {"type": "string", "description": "Comma-separated fields to return. Omit for compact summary."},
                 "account_name": {"type": "string", "description": "Account name"},
                 "subject": {"type": "string", "description": "Subject (create/update)"},
                 "start_time": {"type": "string", "description": "Start ISO datetime (create/update)"},
@@ -165,7 +169,9 @@ TOOLS: list[Tool] = [
                 },
                 "entry_id": {"type": "string", "description": "Contact EntryID (get/update/delete)"},
                 "search": {"type": "string", "description": "Filter by name/email (list)"},
-                "count": {"type": "integer", "description": "Max results (list, default: 100)"},
+                "count": {"type": "integer", "description": "Max results (list, default: 50)"},
+                "offset": {"type": "integer", "description": "Skip first N results for pagination (list, default: 0)"},
+                "fields": {"type": "string", "description": "Comma-separated fields to return. Omit for compact summary."},
                 "account_name": {"type": "string", "description": "Account name"},
                 "full_name": {"type": "string", "description": "Full name (create/update)"},
                 "email": {"type": "string", "description": "Email (create/update)"},
@@ -193,7 +199,9 @@ TOOLS: list[Tool] = [
                     "enum": ["list", "get", "create", "update", "delete", "mark_complete"],
                 },
                 "entry_id": {"type": "string", "description": "Task EntryID (get/update/delete/mark_complete)"},
-                "count": {"type": "integer", "description": "Max results (list, default: 50)"},
+                "count": {"type": "integer", "description": "Max results (list, default: 20)"},
+                "offset": {"type": "integer", "description": "Skip first N results for pagination (list, default: 0)"},
+                "fields": {"type": "string", "description": "Comma-separated fields to return. Omit for compact summary."},
                 "include_completed": {"type": "boolean", "description": "Include completed tasks (list)"},
                 "account_name": {"type": "string", "description": "Account name"},
                 "subject": {"type": "string", "description": "Subject (create/update)"},
@@ -314,13 +322,16 @@ def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str
 
         if action in ("list", "search"):
             folder = FOLDER_MAP.get(args.get("folder", "inbox"), OutlookClient.OL_FOLDER_INBOX)
-            count = args.get("count", 50)
+            count = args.get("count", 20)
+            offset = args.get("offset", 0)
+            fields = args.get("fields")
             account = args.get("account_name")
             if action == "list":
-                result = {"emails": client.list_emails(folder, count, account)}
+                result = {"emails": client.list_emails(folder, count, offset, fields, account)}
             else:
                 result = {"emails": client.search_emails(
-                    folder_type=folder, count=count, account_name=account,
+                    folder_type=folder, count=count, offset=offset, fields=fields,
+                    account_name=account,
                     subject=args.get("subject"), sender=args.get("sender"),
                     received_after=args.get("received_after"), received_before=args.get("received_before"),
                     unread_only=args.get("unread_only", False),
@@ -386,7 +397,9 @@ def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str
         if action == "list":
             result = {"events": client.list_calendar_events(
                 start_date=args.get("start_date"), end_date=args.get("end_date"),
-                count=args.get("count", 50), account_name=args.get("account_name"),
+                count=args.get("count", 20), offset=args.get("offset", 0),
+                fields=args.get("fields"),
+                account_name=args.get("account_name"),
             )}
         elif action == "get":
             result = client.get_appointment_by_id(args["entry_id"])
@@ -423,14 +436,13 @@ def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str
 
         if action == "list":
             result = {"contacts": client.list_contacts(
-                count=args.get("count", 100), search=args.get("search", ""),
+                count=args.get("count", 50), offset=args.get("offset", 0),
+                fields=args.get("fields"),
+                search=args.get("search", ""),
                 account_name=args.get("account_name"),
             )}
         elif action == "get":
-            contacts = client.list_contacts(count=1000, search="", account_name=args.get("account_name"))
-            cid = args["entry_id"]
-            found = next((c for c in contacts if c.get("entry_id") == cid), None)
-            result = found if found else {"error": "Contact not found"}
+            result = client.get_contact_by_id(args["entry_id"])
         elif action == "create":
             result = client.create_contact(
                 full_name=args["full_name"], email=args.get("email", ""),
@@ -458,14 +470,13 @@ def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str
 
         if action == "list":
             result = {"tasks": client.list_tasks(
-                count=args.get("count", 50), include_completed=args.get("include_completed", False),
+                count=args.get("count", 20), offset=args.get("offset", 0),
+                fields=args.get("fields"),
+                include_completed=args.get("include_completed", False),
                 account_name=args.get("account_name"),
             )}
         elif action == "get":
-            tasks = client.list_tasks(count=1000, include_completed=True, account_name=args.get("account_name"))
-            tid = args["entry_id"]
-            found = next((t for t in tasks if t.get("entry_id") == tid), None)
-            result = found if found else {"error": "Task not found"}
+            result = client.get_task_by_id(args["entry_id"])
         elif action == "create":
             result = client.create_task(
                 subject=args["subject"], body=args.get("body", ""),
