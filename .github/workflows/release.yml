@@ -1,0 +1,165 @@
+name: Build and Release WPS MCP
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r requirements.txt
+
+      - name: Build all MCP executables
+        run: python build_exe.py --all
+
+      - name: Create setup guide (README_SETUP.txt)
+        shell: bash
+        run: |
+          cat > dist/README_SETUP.txt << 'GUIDE_EOF'
+          ============================================================
+            WPS MCP Servers — Setup & Configuration Guide
+          ============================================================
+
+          This archive includes the following three MCP servers:
+
+            1. wps-excel-mcp.exe  — WPS Office Excel automation
+            2. wps-word-mcp.exe   — WPS Office Word automation
+            3. outlook-mcp.exe    — Microsoft Outlook automation
+
+          ============================================================
+          System Requirements
+          ============================================================
+
+          - Windows 10 / 11 (x64)
+          - No Python installation required (exe is self-contained)
+
+          Required Office software:
+            - WPS Office (for wps-excel-mcp and wps-word-mcp)
+            - Microsoft Outlook (for outlook-mcp)
+
+          ============================================================
+          Installation Steps
+          ============================================================
+
+          Step 1: Extract the files
+          --------------------------
+          Extract wps-mcp.zip to a directory of your choice, e.g.:
+            C:\Tools\wps-mcp\
+
+          After extraction you will see:
+            C:\Tools\wps-mcp\
+              ├── wps-excel-mcp.exe
+              ├── wps-word-mcp.exe
+              ├── outlook-mcp.exe
+              └── README_SETUP.txt
+
+          Step 2: Configure your MCP client
+          ---------------------------------
+          Add the exe paths to your MCP client config.
+
+          --- VS Code / GitHub Copilot ---
+          Edit .vscode\mcp.json (in your project or user config directory):
+
+          {
+            "servers": {
+              "wps-excel-mcp": {
+                "command": "C:\\Tools\\wps-mcp\\wps-excel-mcp.exe"
+              },
+              "wps-word-mcp": {
+                "command": "C:\\Tools\\wps-mcp\\wps-word-mcp.exe"
+              },
+              "outlook-mcp": {
+                "command": "C:\\Tools\\wps-mcp\\outlook-mcp.exe"
+              }
+            }
+          }
+
+          --- Claude Desktop ---
+          Edit claude_desktop_config.json:
+          (%APPDATA%\Claude\claude_desktop_config.json)
+
+          {
+            "mcpServers": {
+              "wps-excel-mcp": {
+                "command": "C:\\Tools\\wps-mcp\\wps-excel-mcp.exe"
+              },
+              "wps-word-mcp": {
+                "command": "C:\\Tools\\wps-mcp\\wps-word-mcp.exe"
+              },
+              "outlook-mcp": {
+                "command": "C:\\Tools\\wps-mcp\\outlook-mcp.exe"
+              }
+            }
+          }
+
+          --- Other MCP clients ---
+          Use the same JSON format, pointing "command" to the exe path.
+
+          Step 3: Test the connection
+          ---------------------------
+          Restart your AI assistant / MCP client, then try:
+            - "List all Excel workbooks"  (wps-excel-mcp)
+            - "Create a new Word document"  (wps-word-mcp)
+            - "Check my Outlook inbox"  (outlook-mcp)
+
+          ============================================================
+          FAQ
+          ============================================================
+
+          Q: Nothing happens when I double-click the exe?
+          A: These are MCP server programs designed to be called by an
+             MCP client, not run directly. They communicate via stdio.
+
+          Q: It says WPS Office is not found?
+          A: Make sure WPS Office is installed. If it is installed and
+             you still get an error, try opening WPS Office manually
+             first, then start the MCP server.
+
+          Q: Outlook MCP gives an error?
+          A: Ensure Microsoft Outlook is installed and at least one
+             email account is configured.
+
+          Q: How do I uninstall?
+          A: Simply delete the extracted folder. No other steps needed.
+
+          ============================================================
+          Version Info
+          ============================================================
+
+          Version: ${{ github.ref_name }}
+          Repository: https://github.com/${{ github.repository }}
+
+          Built with MCP (Model Context Protocol)
+          https://modelcontextprotocol.io/
+          GUIDE_EOF
+
+      - name: Create ZIP archive
+        shell: pwsh
+        run: |
+          $zipPath = "${{ github.workspace }}\wps-mcp.zip"
+          if (Test-Path $zipPath) { Remove-Item $zipPath }
+          Compress-Archive `
+            -Path "dist\wps-excel-mcp.exe", "dist\wps-word-mcp.exe", "dist\outlook-mcp.exe", "dist\README_SETUP.txt" `
+            -DestinationPath $zipPath `
+            -CompressionLevel Optimal
+          Write-Host "Created: $zipPath ($((Get-Item $zipPath).Length) bytes)"
+
+      - name: Upload ZIP to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: wps-mcp.zip
+          token: ${{ secrets.GITHUB_TOKEN }}

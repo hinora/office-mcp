@@ -86,6 +86,18 @@ Add them to your MCP client config:
 }
 ```
 
+### Pre-built Releases
+
+Every GitHub Release automatically builds a **`wps-mcp.zip`** containing all three MCP servers as standalone `.exe` files, plus a setup guide. No Python or build tools required — just download, extract, and configure your MCP client.
+
+**Download the latest release**: [Releases](https://github.com/hinora/wps-mcp/releases)
+
+The zip includes:
+- `wps-excel-mcp.exe` — WPS Excel MCP server
+- `wps-word-mcp.exe` — WPS Word MCP server
+- `outlook-mcp.exe` — Outlook MCP server
+- `README_SETUP.txt` — Step-by-step setup guide
+
 ## Configuration (Development Mode)
 
 Add the servers to your MCP client configuration:
