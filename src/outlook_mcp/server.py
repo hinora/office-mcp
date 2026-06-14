@@ -282,14 +282,14 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         return [TextContent(type="text", text=json.dumps({
             "error": f"Tool '{name}' timed out after 60 seconds",
             "tool": name
-        }, ensure_ascii=False))]
+        }, ensure_ascii=False, separators=(",", ":")))]
 
     except Exception as e:
         logger.exception(f"Error executing tool '{name}'")
         return [TextContent(type="text", text=json.dumps({
             "error": str(e),
             "tool": name
-        }, ensure_ascii=False))]
+        }, ensure_ascii=False, separators=(",", ":")))]
 
 
 
@@ -501,9 +501,9 @@ def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str
             )
 
     else:
-        return json.dumps({"error": f"Unknown tool: {name}"})
+        return json.dumps({"error": f"Unknown tool: {name}"}, separators=(",", ":"))
 
-    return json.dumps(result, ensure_ascii=False, default=str, indent=2)
+    return json.dumps(result, ensure_ascii=False, default=str, separators=(",", ":"))
 
 
 # ── Entry Point ─────────────────────────────────────────────────────────

@@ -134,14 +134,14 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         return [TextContent(type="text", text=json.dumps({
             "error": f"Tool '{name}' timed out after 60 seconds",
             "tool": name
-        }, ensure_ascii=False))]
+        }, ensure_ascii=False, separators=(",", ":")))]
 
     except Exception as e:
         logger.exception(f"Error executing tool '{name}'")
         return [TextContent(type="text", text=json.dumps({
             "error": str(e),
             "tool": name
-        }, ensure_ascii=False))]
+        }, ensure_ascii=False, separators=(",", ":")))]
 
 
 
@@ -334,8 +334,8 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSExcelClient) -> st
         elif a == "insert_shape": n = client.insert_shape(args.get("shape_type","rectangle"), args.get("left",100), args.get("top",100), args.get("width",200), args.get("height",100), sheet); result = {"message": f"Inserted shape: {n}"}
         elif a == "toggle_gridlines": client.toggle_gridlines(args.get("visible",True), sheet); result = {"message": f"Gridlines {'shown' if args.get('visible',True) else 'hidden'}."}
 
-    else: return json.dumps({"error": f"Unknown tool: {name}"})
-    return json.dumps(result, ensure_ascii=False, default=str, indent=2)
+    else: return json.dumps({"error": f"Unknown tool: {name}"}, separators=(",", ":"))
+    return json.dumps(result, ensure_ascii=False, default=str, separators=(",", ":"))
 
 
 # ── Entry Point ─────────────────────────────────────────────────────────

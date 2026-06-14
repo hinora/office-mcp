@@ -133,15 +133,15 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         logger.error(f"Tool '{name}' timed out after 60 seconds")
         return [TextContent(type="text", text=json.dumps({
             "error": f"Tool '{name}' timed out after 60 seconds",
-            "tool": name,
-        }, ensure_ascii=False))]
+            "tool": name
+        }, ensure_ascii=False, separators=(",", ":")))]
 
     except Exception as e:
         logger.exception(f"Error executing tool '{name}'")
         return [TextContent(type="text", text=json.dumps({
             "error": str(e),
-            "tool": name,
-        }, ensure_ascii=False))]
+            "tool": name
+        }, ensure_ascii=False, separators=(",", ":")))]
 
 
 
@@ -273,8 +273,8 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSWordClient) -> str
         t = client.get_range_text(args["start"], args["end"])
         result = {"start": args["start"], "end": args["end"], "text": t}
 
-    else: return json.dumps({"error": f"Unknown tool: {name}"})
-    return json.dumps(result, ensure_ascii=False, default=str, indent=2)
+    else: return json.dumps({"error": f"Unknown tool: {name}"}, separators=(",", ":"))
+    return json.dumps(result, ensure_ascii=False, default=str, separators=(",", ":"))
 
 
 # ── Entry Point ─────────────────────────────────────────────────────────
