@@ -293,6 +293,13 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
 
 
 
+def _parse_attachments(args: dict[str, Any]) -> list[str] | None:
+    """Parse attachments JSON from arguments."""
+    if "attachments" in args and args["attachments"]:
+        return json.loads(args["attachments"])
+    return None
+
+
 def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str:
     pythoncom.CoInitialize()
     result: Any = None
