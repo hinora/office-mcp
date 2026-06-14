@@ -111,7 +111,7 @@ def build(target: str = "all") -> None:
         exe_name = exe_map.get(t, "")
         if exe_name and (DIST_DIR / exe_name).exists():
             size_mb = (DIST_DIR / exe_name).stat().st_size / (1024 * 1024)
-            print(f"✅  {exe_name} ({size_mb:.1f} MB)")
+            print(f"[OK] {exe_name} ({size_mb:.1f} MB)")
 
 
 def _build_one(target: str) -> None:
