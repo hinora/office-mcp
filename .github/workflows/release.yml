@@ -37,11 +37,14 @@ jobs:
             WPS MCP Servers — Setup & Configuration Guide
           ============================================================
 
-          This archive includes the following three MCP servers:
+          This archive includes the following six MCP servers:
 
             1. wps-excel-mcp.exe  — WPS Office Excel automation
             2. wps-word-mcp.exe   — WPS Office Word automation
-            3. outlook-mcp.exe    — Microsoft Outlook automation
+            3. wps-slide-mcp.exe  — WPS Office Slide automation
+            4. outlook-mcp.exe    — Microsoft Outlook automation
+            5. mcp-meta.exe       — Web search & web fetch tools
+            6. whatsapp-mcp.exe   — Read WhatsApp Desktop messages & media
 
           ============================================================
           System Requirements
@@ -51,8 +54,11 @@ jobs:
           - No Python installation required (exe is self-contained)
 
           Required Office software:
-            - WPS Office (for wps-excel-mcp and wps-word-mcp)
+            - WPS Office (for wps-excel-mcp, wps-word-mcp, and wps-slide-mcp)
             - Microsoft Outlook (for outlook-mcp)
+            - WhatsApp Desktop installed and running (for whatsapp-mcp)
+              Chrome with remote debugging: --remote-debugging-port=9222
+            - None (mcp-meta is standalone — only needs a Brave API key for web-search)
 
           ============================================================
           Installation Steps
@@ -67,7 +73,10 @@ jobs:
             C:\Tools\wps-mcp\
               ├── wps-excel-mcp.exe
               ├── wps-word-mcp.exe
+              ├── wps-slide-mcp.exe
               ├── outlook-mcp.exe
+              ├── mcp-meta.exe
+              ├── whatsapp-mcp.exe
               └── README_SETUP.txt
 
           Step 2: Configure your MCP client
@@ -85,8 +94,20 @@ jobs:
               "wps-word-mcp": {
                 "command": "C:\\Tools\\wps-mcp\\wps-word-mcp.exe"
               },
+              "wps-slide-mcp": {
+                "command": "C:\\Tools\\wps-mcp\\wps-slide-mcp.exe"
+              },
               "outlook-mcp": {
                 "command": "C:\\Tools\\wps-mcp\\outlook-mcp.exe"
+              },
+              "mcp-meta": {
+                "command": "C:\\Tools\\wps-mcp\\mcp-meta.exe",
+                "env": {
+                  "BRAVE_API_KEY": "your-brave-api-key-here"
+                }
+              },
+              "whatsapp-mcp": {
+                "command": "C:\\Tools\\wps-mcp\\whatsapp-mcp.exe"
               }
             }
           }
@@ -103,8 +124,20 @@ jobs:
               "wps-word-mcp": {
                 "command": "C:\\Tools\\wps-mcp\\wps-word-mcp.exe"
               },
+              "wps-slide-mcp": {
+                "command": "C:\\Tools\\wps-mcp\\wps-slide-mcp.exe"
+              },
               "outlook-mcp": {
                 "command": "C:\\Tools\\wps-mcp\\outlook-mcp.exe"
+              },
+              "mcp-meta": {
+                "command": "C:\\Tools\\wps-mcp\\mcp-meta.exe",
+                "env": {
+                  "BRAVE_API_KEY": "your-brave-api-key-here"
+                }
+              },
+              "whatsapp-mcp": {
+                "command": "C:\\Tools\\wps-mcp\\whatsapp-mcp.exe"
               }
             }
           }
@@ -117,7 +150,10 @@ jobs:
           Restart your AI assistant / MCP client, then try:
             - "List all Excel workbooks"  (wps-excel-mcp)
             - "Create a new Word document"  (wps-word-mcp)
+            - "Create a presentation with 3 slides"  (wps-slide-mcp)
             - "Check my Outlook inbox"  (outlook-mcp)
+            - "Search the web for TypeScript 5.5 features"  (mcp-meta)
+            - "List my WhatsApp chats"  (whatsapp-mcp)
 
           ============================================================
           FAQ
@@ -135,6 +171,15 @@ jobs:
           Q: Outlook MCP gives an error?
           A: Ensure Microsoft Outlook is installed and at least one
              email account is configured.
+
+          Q: WhatsApp MCP says "Could not connect to Chrome"?
+          A: Start Chrome with remote debugging enabled:
+             chrome.exe --remote-debugging-port=9222
+             Then open web.whatsapp.com and log in.
+
+          Q: MCP Meta web-search gives "BRAVE_API_KEY not set"?
+          A: Get a free API key at https://brave.com/search/api/ and
+             set it in the "env" section of your MCP client config.
 
           Q: How do I uninstall?
           A: Simply delete the extracted folder. No other steps needed.
@@ -156,7 +201,7 @@ jobs:
           $zipPath = "${{ github.workspace }}\wps-mcp.zip"
           if (Test-Path $zipPath) { Remove-Item $zipPath }
           Compress-Archive `
-            -Path "dist\wps-excel-mcp.exe", "dist\wps-word-mcp.exe", "dist\outlook-mcp.exe", "dist\README_SETUP.txt" `
+            -Path "dist\wps-excel-mcp.exe", "dist\wps-word-mcp.exe", "dist\wps-slide-mcp.exe", "dist\outlook-mcp.exe", "dist\mcp-meta.exe", "dist\whatsapp-mcp.exe", "dist\README_SETUP.txt" `
             -DestinationPath $zipPath `
             -CompressionLevel Optimal
           Write-Host "Created: $zipPath ($((Get-Item $zipPath).Length) bytes)"

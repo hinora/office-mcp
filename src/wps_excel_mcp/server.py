@@ -145,6 +145,14 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
 
 
 
+def _pump_com_messages(timeout_ms: int = 50) -> None:
+    """Pump pending COM/Win32 messages to prevent WPS from freezing."""
+    try:
+        pythoncom.PumpWaitingMessages(timeout=timeout_ms)
+    except Exception:
+        pass
+
+
 def _parse_value(val: str):
     """Parse a string value to int/float if possible."""
     try:
@@ -155,6 +163,8 @@ def _parse_value(val: str):
 def _execute_tool(name: str, args: dict[str, Any], client: WPSExcelClient) -> str:
     pythoncom.CoInitialize()
     result: Any = None
+
+    _pump_com_messages()
     sheet = args.get("sheet_name")
 
     if name == "wps_app":
@@ -335,6 +345,7 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSExcelClient) -> st
         elif a == "toggle_gridlines": client.toggle_gridlines(args.get("visible",True), sheet); result = {"message": f"Gridlines {'shown' if args.get('visible',True) else 'hidden'}."}
 
     else: return json.dumps({"error": f"Unknown tool: {name}"}, separators=(",", ":"))
+    _pump_com_messages()
     return json.dumps(result, ensure_ascii=False, default=str, separators=(",", ":"))
 
 

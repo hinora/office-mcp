@@ -8,7 +8,10 @@ This project provides [Model Context Protocol (MCP)](https://modelcontextprotoco
 |---|---|
 | **wps-excel-mcp** | Automate WPS Office Excel (create, read, format workbooks, charts, etc.) |
 | **wps-word-mcp** | Automate WPS Office Word (create, edit, format documents, tables, etc.) |
+| **wps-slide-mcp** | Automate WPS Office Slide (create, edit presentations, shapes, slide shows, etc.) |
 | **outlook-mcp** | Automate Microsoft Outlook (email, calendar, contacts) |
+| **whatsapp-mcp** | Read WhatsApp Web data (chats, messages, contacts, media) via Chrome DevTools Protocol (CDP) |
+| **mcp-meta** | Web tools: search the web (Brave API) and fetch web page content |
 
 ---
 
@@ -19,8 +22,10 @@ This project provides [Model Context Protocol (MCP)](https://modelcontextprotoco
 - Required Python packages:
   - `mcp` — MCP Python SDK
   - `pywin32` — Windows COM automation
-- **WPS Office** installed (for wps-excel-mcp, wps-word-mcp)
+  - `websockets` — WebSocket client (for WhatsApp CDP)
+- **WPS Office** installed (for wps-excel-mcp, wps-word-mcp, wps-slide-mcp)
 - **Microsoft Outlook** installed (for outlook-mcp)
+- **Google Chrome** with remote debugging and **WhatsApp Web** logged in (for whatsapp-mcp)
 
 ## Installation
 
@@ -48,7 +53,10 @@ build_exe.bat
 # Or build individually:
 build_exe.bat --wps
 build_exe.bat --word
+build_exe.bat --slide
 build_exe.bat --outlook
+build_exe.bat --meta
+build_exe.bat --whatsapp
 ```
 
 Or manually:
@@ -58,13 +66,19 @@ pip install pyinstaller
 python build_exe.py            # Build all
 python build_exe.py --wps      # WPS Excel MCP only
 python build_exe.py --word     # WPS Word MCP only
+python build_exe.py --slide    # WPS Slide MCP only
 python build_exe.py --outlook  # Outlook MCP only
+python build_exe.py --meta     # MCP Meta only
+python build_exe.py --whatsapp # WhatsApp MCP only
 ```
 
 Output:
 - `dist\wps-excel-mcp.exe`
 - `dist\wps-word-mcp.exe`
+- `dist\wps-slide-mcp.exe`
 - `dist\outlook-mcp.exe`
+- `dist\mcp-meta.exe`
+- `dist\whatsapp-mcp.exe`
 
 ### Using the EXEs
 
@@ -79,8 +93,20 @@ Add them to your MCP client config:
     "wps-word-mcp": {
       "command": "C:\\path\\to\\wps-word-mcp.exe"
     },
+    "wps-slide-mcp": {
+      "command": "C:\\path\\to\\wps-slide-mcp.exe"
+    },
     "outlook-mcp": {
       "command": "C:\\path\\to\\outlook-mcp.exe"
+    },
+    "mcp-meta": {
+      "command": "C:\\path\\to\\mcp-meta.exe",
+      "env": {
+        "BRAVE_API_KEY": "your-brave-api-key-here"
+      }
+    },
+    "whatsapp-mcp": {
+      "command": "C:\\path\\to\\whatsapp-mcp.exe"
     }
   }
 }
@@ -88,14 +114,16 @@ Add them to your MCP client config:
 
 ### Pre-built Releases
 
-Every GitHub Release automatically builds a **`wps-mcp.zip`** containing all three MCP servers as standalone `.exe` files, plus a setup guide. No Python or build tools required — just download, extract, and configure your MCP client.
+Every GitHub Release automatically builds a **`wps-mcp.zip`** containing all six MCP servers as standalone `.exe` files, plus a setup guide. No Python or build tools required — just download, extract, and configure your MCP client.
 
 **Download the latest release**: [Releases](https://github.com/hinora/office-mcp/releases)
 
 The zip includes:
 - `wps-excel-mcp.exe` — WPS Excel MCP server
 - `wps-word-mcp.exe` — WPS Word MCP server
+- `wps-slide-mcp.exe` — WPS Slide MCP server
 - `outlook-mcp.exe` — Outlook MCP server
+- `mcp-meta.exe` — MCP Meta server (web search, web fetch)
 - `README_SETUP.txt` — Step-by-step setup guide
 
 ## Configuration (Development Mode)
@@ -114,9 +142,32 @@ Add to your `.vscode/mcp.json`:
       "args": ["-m", "wps_excel_mcp.server"],
       "cwd": "d:/work/wps-mcp/src"
     },
+    "wps-word-mcp": {
+      "command": "python",
+      "args": ["-m", "wps_word_mcp.server"],
+      "cwd": "d:/work/wps-mcp/src"
+    },
+    "wps-slide-mcp": {
+      "command": "python",
+      "args": ["-m", "wps_slide_mcp.server"],
+      "cwd": "d:/work/wps-mcp/src"
+    },
     "outlook-mcp": {
       "command": "python",
       "args": ["-m", "outlook_mcp.server"],
+      "cwd": "d:/work/wps-mcp/src"
+    },
+    "mcp-meta": {
+      "command": "python",
+      "args": ["-m", "mcp_meta.server"],
+      "cwd": "d:/work/wps-mcp/src",
+      "env": {
+        "BRAVE_API_KEY": "your-brave-api-key-here"
+      }
+    },
+    "whatsapp-mcp": {
+      "command": "python",
+      "args": ["-m", "whatsapp_mcp.server"],
       "cwd": "d:/work/wps-mcp/src"
     }
   }
@@ -131,12 +182,96 @@ Or use the installed entry points:
     "wps-excel-mcp": {
       "command": "wps-excel-mcp"
     },
+    "wps-word-mcp": {
+      "command": "wps-word-mcp"
+    },
+    "wps-slide-mcp": {
+      "command": "wps-slide-mcp"
+    },
     "outlook-mcp": {
       "command": "outlook-mcp"
+    },
+    "mcp-meta": {
+      "command": "mcp-meta",
+      "env": {
+        "BRAVE_API_KEY": "your-brave-api-key-here"
+      }
+    },
+    "whatsapp-mcp": {
+      "command": "whatsapp-mcp"
     }
   }
 }
 ```
+
+---
+
+# MCP Meta (`mcp-meta`)
+
+A lightweight MCP server providing **web search** and **web fetch** capabilities for AI assistants.
+
+## Features
+
+| Tool | Description |
+|---|---|
+| **web-search** | Search the web via configurable search providers (Brave Search API supported) |
+| **web-fetch** | Fetch and extract readable text content from any URL |
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `SEARCH_PROVIDER` | No | `brave` | Search provider to use (only `brave` currently) |
+| `BRAVE_API_KEY` | Yes (for web-search) | — | Brave Search API key (get one free at https://brave.com/search/api/) |
+
+### Prerequisites
+
+- **Python 3.10+**
+- Required packages: `mcp`
+- **Brave Search API key** for web-search functionality
+
+## Tool Reference
+
+### `web-search` — Web Search
+
+Search the web using Brave Search API.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `query` | string | Yes | Search query string |
+| `count` | integer | No | Number of results (default: 10, max: 20) |
+| `offset` | integer | No | Pagination offset (default: 0) |
+| `country` | string | No | Two-letter country code (e.g. US, DE, FR) |
+| `search_lang` | string | No | Search language code (e.g. en, de, fr) |
+| `freshness` | string | No | Filter by recency: `pd` (past day), `pw` (past week), `pm` (past month), `py` (past year) |
+
+**Response fields:** `provider`, `query`, `total_results`, `results[]` (each with `title`, `url`, `description`, `age`, `language`).
+
+### `web-fetch` — Web Fetch
+
+Fetch and extract readable text from a URL. Strips HTML tags, scripts, styles, and navigation elements.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `url` | string | Yes | The URL to fetch content from |
+| `max_length` | integer | No | Max characters of content returned (default: 10000) |
+| `raw` | boolean | No | Return raw HTML instead of extracted text (default: false) |
+
+**Response fields:** `url`, `content_type`, `content`, `length`.
+
+### Usage Examples
+
+```
+> Search the web for "latest TypeScript 5.5 features"
+```
+The assistant calls `web-search` with `query="latest TypeScript 5.5 features"`.
+
+```
+> Fetch and summarize the content from https://example.com/article
+```
+The assistant calls `web-fetch` with `url="https://example.com/article"`.
 
 ---
 
@@ -342,10 +477,27 @@ wps-mcp/
     │   ├── word_client.py      # WPS Word COM client
     │   └── tools/
     │       └── __init__.py
-    └── outlook_mcp/            # Outlook MCP Server
+    ├── wps_slide_mcp/          # WPS Slide MCP Server
+    │   ├── __init__.py
+    │   ├── server.py           # MCP server with tool definitions & handlers
+    │   ├── slide_client.py     # WPS Slide COM client
+    │   └── tools/
+    │       └── __init__.py
+    ├── outlook_mcp/            # Outlook MCP Server
+    │   ├── __init__.py
+    │   ├── server.py           # MCP server with tool definitions & handlers
+    │   └── outlook_client.py   # Outlook COM client
+    ├── mcp_meta/               # MCP Meta Server (web tools)
+    │   ├── __init__.py
+    │   ├── server.py           # MCP server: web-search, web-fetch
+    │   └── tools/
+    │       └── __init__.py
+    └── whatsapp_mcp/           # WhatsApp MCP Server
         ├── __init__.py
-        ├── server.py           # MCP server with tool definitions & handlers
-        └── outlook_client.py   # Outlook COM client
+        ├── server.py           # MCP server: WhatsApp Web bridge
+        ├── cdp_client.py       # Chrome DevTools Protocol client
+        └── tools/
+            └── __init__.py
 ```
 
 ## How It Works
@@ -497,6 +649,212 @@ Apply to a `range_spec`: selection (default), content, or `start=X,end=Y`.
 
 ---
 
+# WPS Slide MCP (`wps-slide-mcp`)
+
+Automate WPS Office Slide (Presentation) via COM automation.
+
+## Features
+
+| Category | Operations |
+|---|---|
+| **Presentation** | Create, open, save, close, list, activate, get properties, set slide size |
+| **Slides** | Add, delete, duplicate, move, go to, count, list, set background, set transition |
+| **Shapes** | Text boxes, pictures, rectangles, ovals, arrows, lines, delete, list, position, fill, line, rotation, z-order, group/ungroup, copy, paste, duplicate |
+| **Text** | Get/set shape text |
+| **Font** | Bold, italic, underline, font name/size/color, alignment |
+| **Tables** | Add tables, set cell text, get table data |
+| **Notes** | Get/set speaker notes per slide |
+| **Export** | Export to PDF, export single slide as image |
+| **Slide Show** | Start, start from slide, stop |
+| **Animations** | Add/clear shape animations (20+ effect types) |
+| **Find/Replace** | Find/replace text across all slides |
+| **Master/Layout** | Slide master info, apply layouts, set master background |
+| **Advanced** | Hyperlinks, charts, video/audio media, headers/footers, slide numbers |
+
+## Tool Reference
+
+All 16 tools use a unified `action`-based API. `slide_index` is 1-based; use 0 for the currently active slide.
+
+### `app` — Application Control
+| Action | Description |
+|---|---|
+| `info` | Get WPS Slide version and open presentations count |
+| `show` | Show the WPS Slide window |
+| `hide` | Hide the WPS Slide window |
+| `quit` | Quit WPS Slide |
+
+### `pres` — Presentation Management
+| Action | Description |
+|---|---|
+| `create` | Create a new presentation |
+| `open` | Open a file (`filepath`) |
+| `save` | Save the active presentation (optional `filepath`) |
+| `close` | Close the active presentation (`save`: bool) |
+| `list` | List all open presentations |
+| `activate` | Activate a presentation by `name` |
+| `get_properties` | Get presentation properties (name, slides count, slide size) |
+| `set_slide_size` | Set slide dimensions (`width`, `height` in points) |
+
+### `slide` — Slide Operations
+| Action | Description |
+|---|---|
+| `add` | Add a slide (optional `layout_index`: 1=Title, 2=Content, etc.) |
+| `delete` | Delete a slide by `index` (1-based) |
+| `duplicate` | Duplicate a slide by `index` |
+| `move` | Move a slide from `index` to `to_index` |
+| `go_to` | Navigate to slide by `index` |
+| `count` | Get total slide count |
+| `list` | List all slides with index, name, and shape count |
+| `set_background` | Set solid background color (`color_rgb` as hex) |
+| `set_transition` | Set transition effect (`transition_type`: 1=Fade, 2=Push, 8=Wipe, 25=Zoom, `duration` in seconds) |
+
+### `shape_add` — Add Shapes
+| Action | Description |
+|---|---|
+| `text_box` | Add a text box (`text`, `left`, `top`, `width`, `height`, `slide_index`) |
+| `picture` | Add a picture (`filepath`, `left`, `top`, `width`, `height`, `slide_index`) |
+| `rectangle` | Add a rectangle (`left`, `top`, `width`, `height`, `slide_index`) |
+| `oval` | Add an oval/ellipse (`left`, `top`, `width`, `height`, `slide_index`) |
+| `arrow` | Add a right arrow (`left`, `top`, `width`, `height`, `slide_index`) |
+| `line` | Add a line (`begin_x`, `begin_y`, `end_x`, `end_y`, `slide_index`) |
+
+### `shape_format` — Format Shapes
+| Action | Description |
+|---|---|
+| `set_position` | Set position/size (`name_or_index`, `left`, `top`, `width`, `height`) |
+| `set_fill` | Set fill color (`name_or_index`, `color_rgb` as hex) |
+| `set_line` | Set outline (`name_or_index`, `color_rgb`, `weight`) |
+| `set_rotation` | Set rotation in degrees (`name_or_index`, `rotation`) |
+| `set_zorder` | Set z-order: front/back/forward/backward (`name_or_index`, `zorder`) |
+
+### `shape_organize` — Organize Shapes
+| Action | Description |
+|---|---|
+| `group` | Group shapes (`names` as JSON array of shape names/indices) |
+| `ungroup` | Ungroup a grouped shape (`name_or_index`) |
+| `copy` | Copy a shape to another slide (`name_or_index`, `dest_slide_index`) |
+| `paste` | Paste copied shape (`dest_slide_index`) |
+| `duplicate` | Duplicate a shape (`name_or_index`) |
+| `delete` | Delete a shape by `name_or_index` |
+| `list` | List all shapes on a slide (`slide_index`) |
+| `count` | Get shape count on a slide (`slide_index`) |
+
+> **Note:** `slide_index=0` targets the currently active/visible slide. Use `slide` with `action=go_to` to navigate first.
+
+### `text` — Text Operations
+| Action | Description |
+|---|---|
+| `get` | Get text from a shape (`name_or_index`) |
+| `set` | Set shape text (`name_or_index`, `text`) |
+
+### `font` — Font Formatting
+Apply to a shape (`name_or_index`). Use `start`/`length` for partial text formatting.
+
+| Parameter | Description |
+|---|---|
+| `bold` | Bold on/off (bool) |
+| `italic` | Italic on/off (bool) |
+| `underline` | Underline on/off (bool) |
+| `font_name` | Font family name |
+| `font_size` | Font size (number) |
+| `font_color` | Font color (hex RGB, e.g. FF0000) |
+| `alignment` | Text alignment: left/center/right/justify |
+
+### `table` — Table Operations
+| Action | Description |
+|---|---|
+| `add` | Add a table (`rows`, `cols`, `left`, `top`, `width`, `height`, `slide_index`) |
+| `set_cell` | Set cell text (`shape_name`, `row`, `col`, `text`) |
+| `get_data` | Get all table data as 2D array (`shape_name`) |
+
+### `notes` — Speaker Notes
+| Action | Description |
+|---|---|
+| `get` | Get speaker notes for a slide (`slide_index`) |
+| `set` | Set speaker notes (`slide_index`, `text`) |
+
+### `export` — Export
+| Action | Description |
+|---|---|
+| `pdf` | Export presentation to PDF (`filepath`) |
+| `slide_image` | Export a single slide as image (`filepath`, `slide_index`, `img_width`, `img_height`) |
+
+### `slideshow` — Slide Show Control
+| Action | Description |
+|---|---|
+| `start` | Start slide show from beginning |
+| `start_from` | Start slide show from `slide_index` |
+| `stop` | Stop the running slide show |
+
+### `animate` — Shape Animations
+| Action | Description |
+|---|---|
+| `add` | Add animation (`name_or_index`, `effect_type`: appear/fly/blinds/box/dissolve/fade/zoom/spin/grow_shrink/float etc., `trigger`: on_click/with_previous/after_previous, `duration`, `delay`) |
+| `clear` | Clear animations from shape (`name_or_index`) |
+
+### `find` — Find & Replace
+| Action | Description |
+|---|---|
+| `find` | Find `search_text` across all slides (`match_case`, `match_whole_word`) |
+| `find_replace` | Find `find_text` and replace with `replace_text` (`replace_all`: bool) |
+
+### `master` — Slide Master & Layout
+| Action | Description |
+|---|---|
+| `get_info` | Get slide master information |
+| `apply_layout` | Apply a layout to slide (`slide_index`, `layout_index`, `master_index`) |
+| `set_background` | Set master slide background (`color_rgb`, `master_index`) |
+
+### `advanced` — Advanced Features
+Use `action=help` for full details. Supported actions:
+
+| Action | Description |
+|---|---|
+| `hyperlink` | Add hyperlink to shape (`address`, `text_to_display`, `name_or_index`) |
+| `chart_add` | Add a chart (`chart_type`: column/line/pie/bar/area/scatter, `left`, `top`, `width`, `height`) |
+| `chart_set_data` | Set chart data (`shape_name`, `categories`, `series_data`) |
+| `media_video` | Insert video (`filepath`, `left`, `top`, `width`, `height`) |
+| `media_audio` | Insert audio (`filepath`) |
+| `slide_number` | Toggle slide numbers (`show_slide_number`) |
+| `date_time` | Toggle date/time display (`show_date_time`) |
+| `header_footer` | Set header/footer text (`header_text`, `footer_text`) |
+
+## Usage Examples
+
+### Create a presentation with a title
+
+```
+> Create a new presentation with a title slide that says "Q3 Business Review"
+```
+
+The assistant calls `pres` with `action=create`, then `shape_add` with `action=text_box`.
+
+### Format slide content
+
+```
+> Make the text in shape 1 bold, size 36, and centered
+```
+
+The assistant calls `font` with `name_or_index=1`, `bold=true`, `font_size=36`, `alignment=center`.
+
+### Add an image and export
+
+```
+> Insert the company logo from C:\logos\logo.png on slide 2 at position (600, 20)
+  with width 200, then export as PDF to C:\output\deck.pdf
+```
+
+The assistant calls `shape_add` with `action=picture`, then `export` with `action=pdf`.
+
+## COM ProgID
+
+The client tries these ProgIDs in order, preferring running instances before creating new ones:
+- `WPP.Application` (WPS Slide / Presentation)
+- `KWPP.Application` (older WPS Slide)
+- `PowerPoint.Application` (Microsoft PowerPoint fallback)
+
+---
+
 # Outlook MCP (`outlook-mcp`)
 
 Automate Microsoft Outlook via COM automation.
@@ -645,6 +1003,136 @@ pip install pywin32
 
 - Ensure Outlook is up to date
 - Some operations may trigger Outlook security prompts (Outlook's security model restricts programmatic access)
+
+---
+
+# WhatsApp MCP (`whatsapp-mcp`)
+
+Read WhatsApp Desktop data via Chrome DevTools Protocol (CDP). **Read-only** — no sending, replying, deleting, or mutating any data.
+
+## Features
+
+| Category | Operations |
+|---|---|
+| **Chats** | List all chats, search chats by keyword |
+| **Messages** | Read messages from any chat (with sender names) |
+| **Contacts** | Get contact/group info (name, status, phone) |
+| **Media** | Get media files, download images, view downloaded media |
+| **Screenshot** | Take screenshots of the current WhatsApp view |
+| **Status** | Check connection status |
+
+## Prerequisites
+
+- **Windows 10 / 11**
+- **Chrome** with remote debugging enabled:
+  ```bash
+  chrome.exe --remote-debugging-port=9222
+  ```
+- **WhatsApp Web** (`https://web.whatsapp.com`) open and logged in within the debug Chrome
+
+## Tool Reference
+
+All 9 tools are purely read-only with safety protections that prevent accidental interaction.
+
+### `whatsapp_list_chats`
+List all visible chats from the WhatsApp sidebar. Returns chat name, last message preview, unread badge, and timestamp. No parameters required.
+
+### `whatsapp_read_chat_messages`
+Read recent messages from a specific chat. Opens the chat, scrolls to load history, and extracts messages with sender names.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `chat_name` | string | Yes | Chat/contact name (partial match, case-insensitive) |
+| `count` | integer | No | Max messages to return (default: 20) |
+
+### `whatsapp_get_contact_info`
+Get information about a contact or group. Opens the chat and reads the header — returns display name, status/bio, and phone.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `contact_name` | string | Yes | Contact/group name (partial match, case-insensitive) |
+
+### `whatsapp_search_chats`
+Search chats by keyword using the WhatsApp search box.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `query` | string | Yes | Search keyword |
+
+### `whatsapp_get_chat_media`
+Get recent media files (images, videos, documents) visible in a chat. Blob images are downloaded to local temp files.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `chat_name` | string | Yes | Chat/contact name |
+| `count` | integer | No | Max media items (default: 10) |
+
+### `whatsapp_download_image`
+Download a WhatsApp blob URL to a local file. Use after `whatsapp_get_chat_media` returns blob URLs.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `url` | string | Yes | The blob: URL from a media item |
+| `save_path` | string | No | Optional local file path (default: temp file) |
+
+### `whatsapp_screenshot`
+Take a screenshot of the current WhatsApp Web view. Saves to a temp PNG file. No parameters required.
+
+### `whatsapp_view_media`
+View an image/media file that was previously downloaded. Takes a file path and returns the actual image for display.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `file_path` | string | Yes | Absolute path to the media file |
+
+### `whatsapp_status`
+Check whether Chrome is reachable and WhatsApp tab is found. No parameters required.
+
+## Usage Examples
+
+### Check your chats
+
+```
+> Show me my recent WhatsApp chats
+```
+
+The assistant calls `whatsapp_list_chats`.
+
+### Read messages
+
+```
+> Read the last 10 messages from "Alice"
+```
+
+The assistant calls `whatsapp_read_chat_messages` with `chat_name="Alice"`, `count=10`.
+
+### View shared media
+
+```
+> Show me the recent images from the "Project Team" group
+```
+
+The assistant calls `whatsapp_get_chat_media` with `chat_name="Project Team"`, then `whatsapp_view_media` to display each image.
+
+## Safety Features
+
+- **Danger-zone detection** — Blocks clicks on compose area, send button, and context menus
+- **Post-click verification** — Confirms correct chat is opened after each navigation
+- **Read-only guarantee** — No send, reply, delete, archive, or mutation operations
+
+## Troubleshooting
+
+### "Could not connect to Chrome"
+
+- Ensure Chrome is running with `--remote-debugging-port=9222`
+- Check that no other program is using port 9222
+- Close all Chrome windows and restart with the debugging flag
+
+### "WhatsApp tab not found"
+
+- Open `https://web.whatsapp.com` in the debug Chrome instance
+- Log in by scanning the QR code with your phone
+- Wait for chats to load completely
 
 ## License
 

@@ -145,9 +145,19 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
 
 
 
+def _pump_com_messages(timeout_ms: int = 50) -> None:
+    """Pump pending COM/Win32 messages to prevent WPS from freezing."""
+    try:
+        pythoncom.PumpWaitingMessages(timeout=timeout_ms)
+    except Exception:
+        pass
+
+
 def _execute_tool(name: str, args: dict[str, Any], client: WPSWordClient) -> str:
     pythoncom.CoInitialize()
     result: Any = None
+
+    _pump_com_messages()
 
     if name == "word_app":
         a = args["action"]
@@ -274,6 +284,7 @@ def _execute_tool(name: str, args: dict[str, Any], client: WPSWordClient) -> str
         result = {"start": args["start"], "end": args["end"], "text": t}
 
     else: return json.dumps({"error": f"Unknown tool: {name}"}, separators=(",", ":"))
+    _pump_com_messages()
     return json.dumps(result, ensure_ascii=False, default=str, separators=(",", ":"))
 
 

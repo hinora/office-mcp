@@ -1,16 +1,18 @@
 """
-Build standalone Windows .exe for WPS Excel MCP, WPS Word MCP, and Outlook MCP using PyInstaller.
+Build standalone Windows .exe for WPS Excel MCP, WPS Word MCP, WPS Slide MCP, and Outlook MCP using PyInstaller.
 
 Usage:
     python build_exe.py             # Build all exes
     python build_exe.py --wps       # Build only wps-excel-mcp.exe
     python build_exe.py --word      # Build only wps-word-mcp.exe
+    python build_exe.py --slide     # Build only wps-slide-mcp.exe
     python build_exe.py --outlook   # Build only outlook-mcp.exe
     python build_exe.py --clean     # Clean build (remove build/ and dist/ first)
 
 Output:
     dist/wps-excel-mcp.exe  — Standalone WPS Excel MCP server
     dist/wps-word-mcp.exe   — Standalone WPS Word MCP server
+    dist/wps-slide-mcp.exe  — Standalone WPS Slide MCP server
     dist/outlook-mcp.exe    — Standalone Outlook MCP server
 """
 
@@ -26,7 +28,10 @@ BUILD_DIR = PROJECT_ROOT / "build"
 SPEC_FILE = PROJECT_ROOT / "wps_excel_mcp.spec"
 EXE_NAME = "wps-excel-mcp.exe"
 WORD_EXE_NAME = "wps-word-mcp.exe"
+SLIDE_EXE_NAME = "wps-slide-mcp.exe"
 OUTLOOK_EXE_NAME = "outlook-mcp.exe"
+META_EXE_NAME = "mcp-meta.exe"
+WHATSAPP_EXE_NAME = "whatsapp-mcp.exe"
 
 # Common hidden imports required by pywin32 / COM
 HIDDEN_IMPORTS_COMMON = [
@@ -49,7 +54,6 @@ EXCLUDE_MODULES = [
     "matplotlib",
     "numpy",
     "pandas",
-    "PIL",
     "cv2",
     "scipy",
     "sqlalchemy",
@@ -91,13 +95,14 @@ def build(target: str = "all") -> None:
 
     Args:
         target: 'wps' for wps-excel-mcp, 'word' for wps-word-mcp,
-                'outlook' for outlook-mcp, 'all' for all three.
+                'slide' for wps-slide-mcp, 'outlook' for outlook-mcp,
+                'all' for all four.
     """
     ensure_pyinstaller()
 
     targets_to_build = []
     if target == "all":
-        targets_to_build = ["wps", "word", "outlook"]
+        targets_to_build = ["wps", "word", "slide", "outlook", "meta", "whatsapp"]
     else:
         targets_to_build = [target]
 
@@ -107,7 +112,7 @@ def build(target: str = "all") -> None:
     # List all built exes
     print()
     for t in targets_to_build:
-        exe_map = {"wps": EXE_NAME, "word": WORD_EXE_NAME, "outlook": OUTLOOK_EXE_NAME}
+        exe_map = {"wps": EXE_NAME, "word": WORD_EXE_NAME, "slide": SLIDE_EXE_NAME, "outlook": OUTLOOK_EXE_NAME, "meta": META_EXE_NAME, "whatsapp": WHATSAPP_EXE_NAME}
         exe_name = exe_map.get(t, "")
         if exe_name and (DIST_DIR / exe_name).exists():
             size_mb = (DIST_DIR / exe_name).stat().st_size / (1024 * 1024)
@@ -132,12 +137,36 @@ def _build_one(target: str) -> None:
             "wps_word_mcp.word_client",
             "wps_word_mcp.tools",
         ]
+    elif target == "slide":
+        exe_name = SLIDE_EXE_NAME
+        server_path = PROJECT_ROOT / "src" / "wps_slide_mcp" / "server.py"
+        project_hidden = [
+            "wps_slide_mcp",
+            "wps_slide_mcp.slide_client",
+            "wps_slide_mcp.tools",
+        ]
     elif target == "outlook":
         exe_name = OUTLOOK_EXE_NAME
         server_path = PROJECT_ROOT / "src" / "outlook_mcp" / "server.py"
         project_hidden = [
             "outlook_mcp",
             "outlook_mcp.outlook_client",
+        ]
+    elif target == "meta":
+        exe_name = META_EXE_NAME
+        server_path = PROJECT_ROOT / "src" / "mcp_meta" / "server.py"
+        project_hidden = [
+            "mcp_meta",
+            "mcp_meta.tools",
+        ]
+    elif target == "whatsapp":
+        exe_name = WHATSAPP_EXE_NAME
+        server_path = PROJECT_ROOT / "src" / "whatsapp_mcp" / "server.py"
+        project_hidden = [
+            "whatsapp_mcp",
+            "whatsapp_mcp.cdp_client",
+            "whatsapp_mcp.tools",
+            "websockets",
         ]
     else:
         print(f"[ERROR] Unknown target: {target}")
@@ -190,8 +219,12 @@ def main() -> None:
             target = "wps"
         elif arg in ("--word", "--wps-word"):
             target = "word"
+        elif arg in ("--slide", "--wps-slide"):
+            target = "slide"
         elif arg in ("--outlook",):
             target = "outlook"
+        elif arg in ("--meta",):
+            target = "meta"
         elif arg in ("--all",):
             target = "all"
 

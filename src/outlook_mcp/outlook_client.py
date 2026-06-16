@@ -47,31 +47,41 @@ class OutlookClient:
         self._connect()
 
     def _connect(self) -> None:
-        """Connect to a running Outlook instance or create a new one."""
+        """Connect to a running Outlook instance or create a new one.
+
+        Tries all ProgIDs with GetActiveObject FIRST (reuse) before
+        falling back to Dispatch (create new).
+        """
         pythoncom.CoInitialize()
 
+        # Phase 1: Try to reuse an already-running Outlook instance.
         for prog_id in self._PROG_IDS:
-            # First try getting an already running instance
             try:
                 self._app = win32com.client.GetActiveObject(prog_id)
             except Exception:
-                pass
+                continue
 
-            # If no running instance, create a new one
-            if self._app is None:
+            if self._app is not None:
+                try:
+                    self._namespace = self._app.GetNamespace("MAPI")
+                    break  # Connection verified — reuse this instance
+                except Exception:
+                    self._app = None
+
+        # Phase 2: No running instance found — create a new one.
+        if self._app is None:
+            for prog_id in self._PROG_IDS:
                 try:
                     self._app = win32com.client.Dispatch(prog_id)
                 except Exception:
                     continue
 
-            # Verify the connection works by getting the MAPI namespace
-            if self._app is not None:
-                try:
-                    self._namespace = self._app.GetNamespace("MAPI")
-                    break
-                except Exception:
-                    self._app = None
-                    continue
+                if self._app is not None:
+                    try:
+                        self._namespace = self._app.GetNamespace("MAPI")
+                        break  # Connection verified
+                    except Exception:
+                        self._app = None
 
         if self._app is None:
             raise RuntimeError(

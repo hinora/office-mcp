@@ -37,35 +37,43 @@ class WPSWordClient:
         self._connect()
 
     def _connect(self) -> None:
-        """Connect to a running WPS Word instance or create a new one."""
+        """Connect to a running WPS Word instance or create a new one.
+
+        Tries all ProgIDs with GetActiveObject FIRST (reuse) before
+        falling back to Dispatch (create new). This prevents spawning
+        a duplicate instance when WPS Word is already open.
+        """
         pythoncom.CoInitialize()
 
-        existing_instance = False
-
+        # Phase 1: Try to reuse an already-running instance across ALL ProgIDs.
         for prog_id in self._PROG_IDS:
-            # First try getting an already running instance
             try:
                 self._app = win32com.client.GetActiveObject(prog_id)
-                existing_instance = True
             except Exception:
-                pass
-
-            # If no running instance, create a new one
-            if self._app is None:
-                try:
-                    self._app = win32com.client.Dispatch(prog_id)
-                except Exception:
-                    continue
+                continue
 
             # Verify the connection works by accessing Documents
             if self._app is not None:
                 try:
                     _ = self._app.Documents.Count
-                    break  # Connection verified
+                    break  # Connection verified — reuse this instance
                 except Exception:
                     self._app = None
-                    existing_instance = False
+
+        # Phase 2: No running instance found — create a new one.
+        if self._app is None:
+            for prog_id in self._PROG_IDS:
+                try:
+                    self._app = win32com.client.Dispatch(prog_id)
+                except Exception:
                     continue
+
+                if self._app is not None:
+                    try:
+                        _ = self._app.Documents.Count
+                        break  # Connection verified
+                    except Exception:
+                        self._app = None
 
         if self._app is None:
             raise RuntimeError(
@@ -73,8 +81,14 @@ class WPSWordClient:
                 "Please ensure WPS Office is installed."
             )
 
-        if not existing_instance:
-            self._app.Visible = self._visible
+        # Always enforce visibility — the MCP server is a user-facing
+        # automation tool and users expect to see the app.
+        self._app.Visible = self._visible
+        if self._visible:
+            try:
+                self._app.WindowState = 0  # wdWindowStateNormal (restore)
+            except Exception:
+                pass
 
     @property
     def app(self) -> Any:
