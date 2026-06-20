@@ -163,8 +163,8 @@ TOOLS: list[Tool] = [
             "properties": {
                 "action": {
                     "type": "string",
-                    "description": "Action: list, get, create, update, delete, export",
-                    "enum": ["list", "get", "create", "update", "delete", "export"],
+                    "description": "Action: list, search, get, create, update, delete, export",
+                    "enum": ["list", "search", "get", "create", "update", "delete", "export"],
                 },
                 "entry_id": {"type": "string", "description": "Contact EntryID (get/update/delete)"},
                 "search": {"type": "string", "description": "Filter by name/email (list)"},
@@ -412,7 +412,7 @@ def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str
     elif name == "outlook_contact":
         action = args["action"]
 
-        if action == "list":
+        if action == "list" or action == "search":
             result = {"contacts": client.list_contacts(
                 count=args.get("count", 50), offset=args.get("offset", 0),
                 fields=args.get("fields"),

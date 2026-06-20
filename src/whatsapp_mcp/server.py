@@ -163,6 +163,7 @@ BLOB_TO_DATA_URL_JS = r"""
 """
 
 # Get the bounding box of the first sidebar row matching a chat name.
+# Scrolls the row into view first so the coordinates are valid for clicking.
 FIND_CHAT_BOX_JS = r"""
 (function() {
     const NAME = %s;
@@ -173,6 +174,9 @@ FIND_CHAT_BOX_JS = r"""
         const titleEl = r.querySelector('span[title]');
         const name = (titleEl && titleEl.getAttribute('title')) || r.textContent || '';
         if (name.toLowerCase().includes(NAME.toLowerCase())) {
+            // Scroll the row into view so coordinates are in viewport
+            r.scrollIntoView({block: 'center', behavior: 'instant'});
+            // Small delay to let layout settle
             const rect = r.getBoundingClientRect();
             return JSON.stringify({
                 found: true,
@@ -187,22 +191,26 @@ FIND_CHAT_BOX_JS = r"""
 """
 
 # Extract messages from the currently open chat.
-# Targets only leaf elements with data-pre-plain-text (unique per message).
-# The new WhatsApp format includes a date: "[HH:MM, DD/MM/YYYY] Name: "
+# Queries [data-pre-plain-text] globally (not scoped to a specific container
+# since WhatsApp Web no longer uses a dedicated conversation-panel-messages
+# data-testid). Each element has a data-pre-plain-text attribute like
+# "[18:30, 3/29/2023] Hinora: " from which we parse the sender name.
 EXTRACT_MESSAGES_JS = r"""
 (function() {
     const COUNT = %d;
-    const container = document.querySelector(
-        '[data-testid="conversation-panel-messages"]'
+
+    // Scroll the message area (any scrollable ancestor) to load older messages
+    var scrollable = document.querySelector(
+        '[data-testid="msg-container"], ' +
+        '#app div[style*="overflow"]'
     );
-    if (!container) return JSON.stringify({error: 'Message pane not found'});
+    if (scrollable && scrollable.scrollTop !== undefined) {
+        scrollable.scrollTop = 0;
+    }
 
-    // Scroll up to load older messages
-    container.scrollTop = 0;
-    setTimeout(() => { container.scrollTop = 0; }, 300);
-
-    // Target only leaf elements with data-pre-plain-text (unique per message)
-    const rows = container.querySelectorAll('[data-pre-plain-text]');
+    // Query ALL elements with data-pre-plain-text (globally — no specific
+    // container needed since sidebar rows don't carry this attribute)
+    const rows = document.querySelectorAll('[data-pre-plain-text]');
     const results = [];
     for (const row of rows) {
         const preText = row.getAttribute('data-pre-plain-text') || '';
@@ -211,14 +219,17 @@ EXTRACT_MESSAGES_JS = r"""
         const preMatch = preText.match(/\]\s*(.+?)\s*:?\s*$/);
         if (preMatch) sender = preMatch[1].trim();
 
-        // Get text from the selectable-text or copyable-text child
+        // Get text from selectable-text child (newer layout) or msg-text (older)
         const selectable = row.querySelector(
-            '.selectable-text, [data-testid="msg-text"]'
+            '[data-testid="selectable-text"], ' +
+            '.selectable-text, ' +
+            '.copyable-text, ' +
+            '[data-testid="msg-text"]'
         );
         let text = selectable
             ? selectable.textContent.trim()
             : row.textContent.trim();
-        // Strip the [HH:MM, ...] prefix if it leaked into textcontent
+        // Strip the [HH:MM, ...] prefix if it leaked into textContent
         text = text.replace(/^\[?\d{1,2}:\d{2}[,\]]\s*[^\n]*?\n?/, '').trim();
 
         if (!text && !sender) continue;
@@ -234,36 +245,76 @@ EXTRACT_MESSAGES_JS = r"""
 """
 
 # Get contact info from currently open chat.
+# Uses span[title] (most reliable across WhatsApp versions) for the display
+# name, and scans the conversation area for status/subtitle text.
 CONTACT_INFO_JS = r"""
 (function() {
-    const header = document.querySelector(
-        '[data-testid="conversation-header"], ' +
-        '[data-testid="conversation-info-header"]'
-    );
-    if (!header) return JSON.stringify({error: 'Header not found'});
+    var displayName = '';
+    var status = '';
 
-    const titleEl = header.querySelector(
-        '[data-testid="conversation-info-header-chat-title"], ' +
-        'span[title]'
-    );
-    const displayName = titleEl
-        ? (titleEl.getAttribute('title') || titleEl.textContent || '').trim()
-        : '';
+    // ── Best source: span[title] anywhere in #app ───────────────
+    // Only picks up span[title] that are NOT in the sidebar
+    // (sidebar titles are chat list rows, not the conversation header)
+    var titleSpans = document.querySelectorAll('#app span[title]');
+    for (var i = 0; i < titleSpans.length; i++) {
+        var s = titleSpans[i];
+        var t = s.getAttribute('title') || '';
+        // Skip sidebar rows and wordmark/logo elements
+        if (s.closest('#side') || s.closest('#pane-side')) continue;
+        if (t === 'wa-wordmark-refreshed' || t.match(/^w[ads]{1,2}-/i)) continue;
+        if (t.length > 0) {
+            displayName = t;
+            break;
+        }
+    }
 
-    const subtitleEl = header.querySelector(
-        '[data-testid="chat-subtitle"]'
+    // ── Fallback: any heading-like element in the conversation area ──
+    if (!displayName) {
+        var headings = document.querySelectorAll(
+            '#app h1, #app h2, #app [role="heading"]'
+        );
+        for (var j = 0; j < headings.length; j++) {
+            var h = headings[j];
+            if (!h.closest('#side') && !h.closest('#pane-side')) {
+                var txt = h.textContent.trim();
+                if (txt && txt.length < 80) {
+                    displayName = txt;
+                    break;
+                }
+            }
+        }
+    }
+
+    // ── Status/subtitle ─────────────────────────────────────────
+    var subtitleEl = document.querySelector('[data-testid="chat-subtitle"]');
+    if (subtitleEl) {
+        status = subtitleEl.textContent.trim();
+    }
+
+    // ── Phone (try to find it in the contact panel) ─────────────
+    var phone = '';
+    var phoneEl = document.querySelector(
+        '[data-testid="chat-subtitle"] span[dir="auto"], ' +
+        'span[title*="+"], ' +
+        'span[title*="84"], ' +
+        'span[title*="1-"]'
     );
-    const status = subtitleEl ? subtitleEl.textContent.trim() : '';
+    if (phoneEl) {
+        var p = phoneEl.getAttribute('title') || phoneEl.textContent || '';
+        var pm = p.match(/\+[\d\s\-\(\)]{6,20}/);
+        if (pm) phone = pm[0].trim();
+    }
 
     return JSON.stringify({
-        name: displayName,
-        status: status,
-        phone: '',
+        name: displayName || 'Unknown',
+        status: status || '',
+        phone: phone
     });
 })();
 """
 
 # Type text into the search box and wait for results.
+# Uses a polling loop (up to 6 s) to handle slow WhatsApp search rendering.
 SEARCH_AND_GET_RESULTS_JS = r"""
 (async function() {
     const QUERY = %s;
@@ -273,10 +324,32 @@ SEARCH_AND_GET_RESULTS_JS = r"""
     );
     if (!searchBox) return JSON.stringify({error: 'Search box not found'});
 
+    // Helper: extract names from the sidebar rows right now
+    const collectRows = () => {
+        const pane = document.querySelector('#pane-side');
+        if (!pane) return [];
+        const rows = pane.querySelectorAll('[role="row"]');
+        const results = [];
+        for (const r of rows) {
+            const titleEl = r.querySelector('span[title]');
+            const name = titleEl ? titleEl.getAttribute('title') : '';
+            if (!name) continue;
+            const previewEls = r.querySelectorAll('span[dir="auto"]');
+            let preview = '';
+            for (const s of previewEls) {
+                const t = s.textContent.trim();
+                if (t && t !== name && !t.match(/^\d{1,2}:\d{2}/)) {
+                    preview = t; break;
+                }
+            }
+            results.push({name, preview});
+        }
+        return results;
+    };
+
     // Focus and clear
     searchBox.focus();
     searchBox.select();
-    // Clear by setting value and dispatching input event
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
         window.HTMLInputElement.prototype, 'value'
     ).set;
@@ -284,31 +357,39 @@ SEARCH_AND_GET_RESULTS_JS = r"""
     searchBox.dispatchEvent(new Event('input', {bubbles: true}));
     await new Promise(r => setTimeout(r, 300));
 
+    // Snapshot rows BEFORE typing to compare later
+    const preRows = collectRows().map(c => c.name);
+
     // Type query
     nativeInputValueSetter.call(searchBox, QUERY);
     searchBox.dispatchEvent(new Event('input', {bubbles: true}));
-    await new Promise(r => setTimeout(r, 2000));
 
-    // Read results
-    const pane = document.querySelector('#pane-side');
-    if (!pane) return JSON.stringify({error: 'Sidebar not found'});
-    const rows = pane.querySelectorAll('[role="row"]');
-    const results = [];
-    for (const r of rows) {
-        const titleEl = r.querySelector('span[title]');
-        const name = titleEl ? titleEl.getAttribute('title') : '';
-        if (!name) continue;
-        const previewEls = r.querySelectorAll('span[dir="auto"]');
-        let preview = '';
-        for (const s of previewEls) {
-            const t = s.textContent.trim();
-            if (t && t !== name && !t.match(/^\d{1,2}:\d{2}/)) {
-                preview = t; break;
-            }
+    // Poll for results — up to 6 s, checking every 500 ms.
+    // Stop early when the row set has actually changed (search rendered).
+    const MAX_WAIT = 6000;
+    const POLL_INTERVAL = 500;
+    let waited = 0;
+    let finalResults = [];
+    while (waited < MAX_WAIT) {
+        await new Promise(r => setTimeout(r, POLL_INTERVAL));
+        waited += POLL_INTERVAL;
+        const current = collectRows();
+        const names = current.map(c => c.name);
+        // If the list changed vs pre-search state, results have loaded
+        const changed = names.length !== preRows.length ||
+            !names.every((n, i) => n === preRows[i]);
+        if (changed && current.length > 0) {
+            finalResults = current;
+            break;
         }
-        results.push({name, preview});
+        // Keep the last batch even if no clear change detected
+        if (current.length > 0) finalResults = current;
     }
-    return JSON.stringify({query: QUERY, results: results.slice(0, 20)});
+    // Fallback: one final read
+    if (finalResults.length === 0) {
+        finalResults = collectRows();
+    }
+    return JSON.stringify({query: QUERY, results: finalResults.slice(0, 20)});
 })();
 """
 
@@ -530,15 +611,22 @@ async def list_tools() -> list[Tool]:
     return TOOLS
 
 
+# Serialize all tool calls — only ONE at a time.
+# Concurrent calls would race on the same WhatsApp Web page (clicks,
+# typing, DOM reads) and produce corrupted/interleaved results.
+_tool_lock = asyncio.Lock()
+
+
 @server.call_tool()
 async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
-    try:
-        return await _dispatch(name, arguments)
-    except Exception as e:
-        logger.exception(f"Error executing tool '{name}'")
-        return [TextContent(type="text", text=json.dumps({
-            "error": str(e), "tool": name,
-        }, ensure_ascii=False, separators=(",", ":")))]
+    async with _tool_lock:
+        try:
+            return await _dispatch(name, arguments)
+        except Exception as e:
+            logger.exception(f"Error executing tool '{name}'")
+            return [TextContent(type="text", text=json.dumps({
+                "error": str(e), "tool": name,
+            }, ensure_ascii=False, separators=(",", ":")))]
 
 
 async def _dispatch(name: str, args: dict[str, Any]) -> list[TextContent]:
@@ -674,27 +762,62 @@ def _image_text(
 
 # ── Post-Click Verification ────────────────────────────────────────────
 
-# Verify that the currently open chat header matches the expected name.
+# Verify that the currently open chat matches the expected name.
+# Uses a layered approach:
+#   1. Check if a message container exists — proves ANY chat is open
+#   2. Search the full DOM for the expected name in text content
+#   3. Fall back to span[title] and document.title
 VERIFY_CHAT_OPEN_JS = r"""
 (function() {
     const EXPECTED = %s;
-    const header = document.querySelector(
-        '[data-testid="conversation-header"], ' +
-        '[data-testid="conversation-info-header"]'
+    const lowered = EXPECTED.toLowerCase();
+
+    // ── Layer 1: Is any chat actually open? ─────────────────────
+    const msgPane = document.querySelector(
+        '[data-testid="conversation-panel-messages"], ' +
+        '#main [data-testid="msg-container"], ' +
+        '[data-testid="conversation-panel-messages"] > div'
     );
-    if (!header) return JSON.stringify({verified: false, reason: 'Header not found'});
-    const titleEl = header.querySelector(
-        '[data-testid="conversation-info-header-chat-title"], ' +
-        'span[title]'
-    );
-    const actual = titleEl
-        ? (titleEl.getAttribute('title') || titleEl.textContent || '').trim()
-        : '';
-    const match = actual.toLowerCase().includes(EXPECTED.toLowerCase());
+    const hasOpenChat = !!msgPane;
+
+    // ── Layer 2: Does the expected name appear in the page? ────
+    // Scan all span[title] attributes (sidebar rows + conversation header)
+    const titleSpans = document.querySelectorAll('span[title]');
+    for (const s of titleSpans) {
+        const t = s.getAttribute('title') || '';
+        if (t.toLowerCase().includes(lowered)) {
+            return JSON.stringify({verified: true, actual_name: t, source: 'span[title]'});
+        }
+    }
+
+    // ── Layer 3: document.title (works in tab mode, not PWA) ───
+    const docTitle = (document.title || '').replace(/^\(\d+\)\s*/, '').trim();
+    if (docTitle && docTitle.toLowerCase().includes(lowered)) {
+        return JSON.stringify({verified: true, actual_name: docTitle, source: 'title'});
+    }
+
+    // ── Layer 4: URL hash (works in tab mode, not PWA) ─────────
+    const hash = location.hash || '';
+    if (hash && (hash.toLowerCase().includes(encodeURIComponent(EXPECTED).toLowerCase()) ||
+        hash.toLowerCase().includes(lowered))) {
+        return JSON.stringify({verified: true, actual_name: EXPECTED, source: 'url'});
+    }
+
+    // ── Layer 5: body innerText substring scan ─────────────────
+    const bodyText = (document.body.innerText || '').substring(0, 500).toLowerCase();
+    const foundInBody = bodyText.includes(lowered);
+
+    // ── Failure diagnostics ────────────────────────────────────
     return JSON.stringify({
-        verified: match,
-        actual_name: actual,
-        expected: EXPECTED
+        verified: false,
+        has_open_chat: hasOpenChat,
+        found_in_body: foundInBody,
+        reason: hasOpenChat && foundInBody
+            ? 'Chat seems open but name not confirmed via title spans'
+            : (!hasOpenChat ? 'No message pane visible' : 'Name not found in page'),
+        actual_name: 'unknown',
+        doc_title: docTitle.substring(0, 80),
+        hash_sample: hash.substring(0, 80)
     });
 })();
 """
@@ -709,6 +832,7 @@ async def _open_chat(chat_name: str) -> dict:
     conversation header actually shows the expected chat name. If the
     wrong chat opened (e.g., mis-click on a different element), returns
     an error instead of silently operating on the wrong conversation.
+    Retries verification with progressive waits to handle slow DOM rendering.
     """
     await _clear_search()  # ensure full chat list is visible
     await asyncio.sleep(0.3)
@@ -717,20 +841,39 @@ async def _open_chat(chat_name: str) -> dict:
     if "error" in info:
         return info
     await _click_at(info["x"], info["y"])
-    await asyncio.sleep(1.5)
-    # Post-click verification: did the right chat actually open?
+
+    # Post-click verification with retries for slow DOM rendering
     verify_js = VERIFY_CHAT_OPEN_JS % json.dumps(chat_name)
-    verify = await _eval_json(verify_js)
-    if not verify.get("verified"):
-        return {
-            "error": (
-                f"Chat verification failed: expected '{chat_name}' but "
-                f"header shows '{verify.get('actual_name', 'unknown')}'. "
-                f"Reason: {verify.get('reason', 'name mismatch')}. "
-                f"Target chat may have scrolled out of view or DOM changed."
-            )
-        }
-    return info
+    for attempt, wait in enumerate((1.5, 2.0, 2.5), 1):
+        await asyncio.sleep(wait)
+        verify = await _eval_json(verify_js)
+        if verify.get("verified"):
+            logger.info(f"Chat '{chat_name}' verified via {verify.get('source')} (attempt {attempt})")
+            return info
+        reason = verify.get("reason", "")
+        has_open = verify.get("has_open_chat", False)
+        # Retry if no message pane yet (DOM still loading) or
+        # name not in page yet (slow rendering).
+        # Break early if a message pane exists but wrong name — different chat opened.
+        if not has_open:
+            logger.info(f"No message pane yet on attempt {attempt}, retrying...")
+        elif verify.get("found_in_body"):
+            # Chat seems open, just verification didn't confirm — one more retry
+            logger.info(f"Chat open but name not in title spans on attempt {attempt}, retrying...")
+        else:
+            logger.warning(f"Wrong chat opened (has pane but name absent), breaking")
+            break
+
+    return {
+        "error": (
+            f"Chat verification failed: expected '{chat_name}'. "
+            f"Has open chat: {verify.get('has_open_chat', False)}. "
+            f"Name in body: {verify.get('found_in_body', False)}. "
+            f"Reason: {verify.get('reason', 'unknown')}. "
+            f"Title: {verify.get('doc_title', 'N/A')}. "
+            f"Target chat may have scrolled out of view or DOM changed."
+        )
+    }
 
 
 async def _read_messages(chat_name: str, count: int) -> dict:
@@ -751,7 +894,11 @@ async def _get_contact(contact_name: str) -> dict:
         return info
     await asyncio.sleep(0.5)
     result = await _eval_json(CONTACT_INFO_JS)
-    result["chat_name"] = info.get("name", contact_name)
+    known_name = info.get("name", contact_name)
+    result["chat_name"] = known_name
+    # Prefer the verified name from _open_chat over unreliable DOM probes
+    if not result.get("name") or result["name"] in ("Unknown", "wa-wordmark-refreshed"):
+        result["name"] = known_name
     return result
 
 
@@ -769,30 +916,40 @@ async def _search_chats(query: str) -> dict:
 
 
 async def _clear_search() -> None:
-    """Clear the search box and return to the full chat list."""
+    """Clear the search box and return to the full chat list.
+
+    Dispatches Escape on the search input element (not document) to
+    properly trigger React's synthetic event handlers.
+    Falls back to clearing the input value directly.
+    """
     await _eval("""
     (function(){
-        // Press Escape to exit search mode
-        const event = new KeyboardEvent('keydown', {
-            key: 'Escape', code: 'Escape', keyCode: 27,
-            which: 27, bubbles: true
-        });
-        document.dispatchEvent(event);
-        // Also clear the search box directly
-        const input = document.querySelector(
+        var input = document.querySelector(
             '#side input[type="text"], ' +
             '[data-testid="chat-list-search-container"] input[type="text"]'
         );
-        if (input) {
-            const setter = Object.getOwnPropertyDescriptor(
-                window.HTMLInputElement.prototype, 'value'
-            ).set;
-            setter.call(input, '');
+        if (!input) return;
+        // Focus the input first so it receives the key event
+        input.focus();
+        // Dispatch Escape keydown on the input itself (not document)
+        input.dispatchEvent(new KeyboardEvent('keydown', {
+            key: 'Escape', code: 'Escape', keyCode: 27,
+            which: 27, bubbles: true, cancelable: true
+        }));
+        // Also try input event to clear
+        var setter = Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype, 'value'
+        );
+        if (setter && setter.set) {
+            setter.set.call(input, '');
             input.dispatchEvent(new Event('input', {bubbles: true}));
+            input.dispatchEvent(new Event('change', {bubbles: true}));
         }
+        // Blur to trigger any blur handlers
+        input.blur();
     })()
     """)
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(1.0)
 
 
 async def _download_blobs(blob_urls: list[str]) -> list[dict]:

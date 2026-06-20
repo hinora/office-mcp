@@ -194,14 +194,12 @@ class OutlookClient:
         items = folder.Items
 
         # Build DASL filter if not explicitly provided
+        # NOTE: sender is handled via post-filter below (DASL sendername doesn't
+        # support email-address lookups), so it's excluded from the DASL query.
         if not query:
             filters = []
             if subject:
                 filters.append(f"@SQL=\"urn:schemas:httpmail:subject\" LIKE '%{subject}%'")
-            if sender:
-                filters.append(
-                    f"@SQL=\"urn:schemas:httpmail:sendername\" LIKE '%{sender}%'"
-                )
             if received_after:
                 filters.append(
                     f"@SQL=\"urn:schemas:httpmail:datereceived\" >= '{received_after}'"
@@ -226,16 +224,38 @@ class OutlookClient:
         filtered.Sort("[ReceivedTime]", True)
 
         result = []
-        start = 1 + offset
-        end = min(start + count, filtered.Count + 1)
-        for i in range(start, end):
+        sender_lower = sender.lower().strip() if sender else None
+        i = 1 + offset
+        total = filtered.Count
+
+        while i <= total and len(result) < count:
             try:
                 item = filtered.Item(i)
                 if item.Class == 43:
+                    # Post-filter by sender (both display name and email address)
+                    if sender_lower:
+                        item_sender_name = (item.SenderName or "").lower()
+                        item_sender_email = ""
+                        try:
+                            if item.SenderEmailType == "SMTP":
+                                item_sender_email = (item.SenderEmailAddress or "").lower()
+                            elif item.SenderEmailType == "EX":
+                                try:
+                                    item_sender_email = (item.Sender.EmailAddress or "").lower()
+                                except Exception:
+                                    pass
+                        except Exception:
+                            pass
+                        if (sender_lower not in item_sender_name and
+                                sender_lower not in item_sender_email):
+                            i += 1
+                            continue  # Skip — doesn't match sender name or email
+
                     d = self._mail_to_summary(item)
                     result.append(self._filter_fields(d, fields))
             except Exception:
-                continue
+                pass
+            i += 1
 
         return result
 
@@ -1613,6 +1633,9 @@ class OutlookClient:
             "entry_id": item.EntryID,
             "subject": item.Subject,
             "sender_name": item.SenderName,
+            "sender_email": "",
+            "to": item.To or "",
+            "cc": item.CC or "",
             "received_time": str(item.ReceivedTime),
             "unread": item.UnRead,
             "importance": item.Importance,
@@ -1621,6 +1644,21 @@ class OutlookClient:
             "categories": item.Categories or "",
             "flag_status": item.FlagStatus,
         }
+
+        # Try to get sender email
+        try:
+            if item.SenderEmailType == "SMTP":
+                result["sender_email"] = item.SenderEmailAddress
+            elif item.SenderEmailType == "EX":
+                sender = item.Sender
+                if sender:
+                    try:
+                        result["sender_email"] = sender.AddressEntryUserType
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
         return self._strip_falsy(result)
 
     def _mail_to_dict(self, item: Any, include_body: bool = False) -> dict[str, Any]:

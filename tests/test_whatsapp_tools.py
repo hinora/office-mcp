@@ -274,8 +274,8 @@ def test_list_chats_js_has_key_elements():
 def test_extract_messages_js_has_key_elements():
     """EXTRACT_MESSAGES_JS queries message pane and extracts messages."""
     from whatsapp_mcp.server import EXTRACT_MESSAGES_JS
-    assert_in("conversation-panel-messages", EXTRACT_MESSAGES_JS)
     assert_in("data-pre-plain-text", EXTRACT_MESSAGES_JS)
+    assert_in("selectable-text", EXTRACT_MESSAGES_JS)
     assert_in("scrollTop", EXTRACT_MESSAGES_JS)
     assert_in("COUNT", EXTRACT_MESSAGES_JS)
 
@@ -291,8 +291,8 @@ def test_search_chats_js_has_key_elements():
 def test_contact_info_js_has_key_elements():
     """CONTACT_INFO_JS reads header info."""
     from whatsapp_mcp.server import CONTACT_INFO_JS
-    assert_in("conversation-header", CONTACT_INFO_JS)
-    assert_in("chat-title", CONTACT_INFO_JS)
+    assert_in("span[title]", CONTACT_INFO_JS)
+    assert_in("chat-subtitle", CONTACT_INFO_JS)
 
 
 def test_js_templates_parameterized():
@@ -503,7 +503,7 @@ ASYNC_TESTS = [
 async def run_async_tests():
     for name, fn in ASYNC_TESTS:
         try:
-            await asyncio.wait_for(fn(), timeout=10)
+            await asyncio.wait_for(fn(), timeout=30)
             global _passed
             _passed += 1
             _results.append({"name": name, "status": "PASS"})

@@ -216,7 +216,17 @@ class WhatsAppClient:
         """
         async with self._lock:
             if self._cdp and self._cdp.connected:
-                return "ok"
+                # Verify the connection is still alive with a quick ping
+                try:
+                    await self._cdp.evaluate("1")
+                    return "ok"
+                except Exception:
+                    logger.warning("CDP connection appears dead, reconnecting...")
+                    try:
+                        await self._cdp.disconnect()
+                    except Exception:
+                        pass
+                    self._cdp = None
 
             if self._cdp:
                 try:
@@ -277,7 +287,26 @@ class WhatsAppClient:
         if status != "ok":
             raise RuntimeError(status)
         assert self._cdp is not None
-        return await self._cdp.evaluate(expression, await_promise)
+        try:
+            return await self._cdp.evaluate(expression, await_promise)
+        except Exception as e:
+            err_msg = str(e)
+            # If the WebSocket died mid-request, force reconnect and retry once
+            if "no close frame" in err_msg or "close frame" in err_msg:
+                logger.warning(f"CDP connection lost, reconnecting: {err_msg}")
+                async with self._lock:
+                    if self._cdp:
+                        try:
+                            await self._cdp.disconnect()
+                        except Exception:
+                            pass
+                        self._cdp = None
+                status2 = await self.connect()
+                if status2 != "ok":
+                    raise RuntimeError(f"Reconnection failed: {status2}")
+                assert self._cdp is not None
+                return await self._cdp.evaluate(expression, await_promise)
+            raise
 
     async def click_at(self, x: float, y: float) -> None:
         """Click at coordinates on the WhatsApp page. Auto-connects if needed."""
@@ -285,7 +314,26 @@ class WhatsAppClient:
         if status != "ok":
             raise RuntimeError(status)
         assert self._cdp is not None
-        await self._cdp.click_at(x, y)
+        try:
+            await self._cdp.click_at(x, y)
+        except Exception as e:
+            err_msg = str(e)
+            if "no close frame" in err_msg or "close frame" in err_msg:
+                logger.warning(f"CDP connection lost during click, reconnecting: {err_msg}")
+                async with self._lock:
+                    if self._cdp:
+                        try:
+                            await self._cdp.disconnect()
+                        except Exception:
+                            pass
+                        self._cdp = None
+                status2 = await self.connect()
+                if status2 != "ok":
+                    raise RuntimeError(f"Reconnection failed: {status2}")
+                assert self._cdp is not None
+                await self._cdp.click_at(x, y)
+            else:
+                raise
 
     async def screenshot(self, format: str = "png", quality: int = 80) -> bytes:
         """Take a screenshot of the WhatsApp page. Auto-connects if needed."""
@@ -293,4 +341,22 @@ class WhatsAppClient:
         if status != "ok":
             raise RuntimeError(status)
         assert self._cdp is not None
-        return await self._cdp.capture_screenshot(format, quality)
+        try:
+            return await self._cdp.capture_screenshot(format, quality)
+        except Exception as e:
+            err_msg = str(e)
+            if "no close frame" in err_msg or "close frame" in err_msg:
+                logger.warning(f"CDP connection lost during screenshot, reconnecting: {err_msg}")
+                async with self._lock:
+                    if self._cdp:
+                        try:
+                            await self._cdp.disconnect()
+                        except Exception:
+                            pass
+                        self._cdp = None
+                status2 = await self.connect()
+                if status2 != "ok":
+                    raise RuntimeError(f"Reconnection failed: {status2}")
+                assert self._cdp is not None
+                return await self._cdp.capture_screenshot(format, quality)
+            raise
