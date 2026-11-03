@@ -94,17 +94,39 @@ class OutlookClient:
                 "Please ensure Microsoft Outlook is installed and running."
             )
 
+    def _app_alive(self) -> bool:
+        """Cheap check that the cached Outlook COM object still responds."""
+        if self._app is None:
+            return False
+        try:
+            _ = self._app.Version
+            return True
+        except pythoncom.com_error:
+            return False
+
+    def _reset(self) -> None:
+        """Drop cached COM references so the next access reconnects.
+
+        Needed when Outlook crashes/restarts or the COM connection is lost
+        (RPC_E_DISCONNECTED) — otherwise every call keeps failing with
+        "The object invoked has disconnected from its clients".
+        """
+        self._app = None
+        self._namespace = None
+
     @property
     def app(self) -> Any:
-        """Get the underlying COM application object."""
-        if self._app is None:
+        """Get the underlying COM application object (reconnects if Outlook died)."""
+        if not self._app_alive():
+            self._reset()
             self._connect()
         return self._app
 
     @property
     def namespace(self) -> Any:
-        """Get the MAPI namespace."""
-        if self._namespace is None:
+        """Get the MAPI namespace (reconnects if Outlook died)."""
+        if not self._app_alive():
+            self._reset()
             self._connect()
         return self._namespace
 

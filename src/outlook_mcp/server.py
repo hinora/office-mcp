@@ -267,38 +267,67 @@ async def list_tools() -> list[Tool]:
     return TOOLS
 
 
+def _is_disconnect_error(e: BaseException) -> bool:
+    """True for COM 'object disconnected' failures worth one reconnect retry.
+
+    Retrying is intentionally restricted to disconnect-type errors so a
+    partially-completed operation (e.g. a draft) is never executed twice.
+    """
+    if isinstance(e, pythoncom.com_error):
+        hresult = e.args[0] if e.args else None
+        # RPC_E_DISCONNECTED (0x80010108), CO_E_OBJNOTCONNECTED (0x800401FD),
+        # RPC_S_SERVER_UNAVAILABLE (0x800706BA)
+        return hresult in (-2147417848, -2147220995, -2147023174)
+    msg = str(e).lower()
+    return "disconnected" in msg or "connection lost" in msg
+
+
+def _reset_client() -> None:
+    """Drop the cached OutlookClient so the next call reconnects fresh."""
+    global _client
+    _client = None
+
+
 @server.call_tool()
 async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     """Handle tool calls."""
-    try:
-        client = get_client()
+    for attempt in (1, 2):
+        try:
+            client = get_client()
 
-        loop = asyncio.get_running_loop()
-        result = await asyncio.wait_for(
-            loop.run_in_executor(
-                _sta_executor,
-                _execute_tool,
-                name,
-                arguments,
-                client,
-            ),
-            timeout=60.0,
-        )
-        return [TextContent(type="text", text=result)]
+            loop = asyncio.get_running_loop()
+            result = await asyncio.wait_for(
+                loop.run_in_executor(
+                    _sta_executor,
+                    _execute_tool,
+                    name,
+                    arguments,
+                    client,
+                ),
+                timeout=60.0,
+            )
+            return [TextContent(type="text", text=result)]
 
-    except asyncio.TimeoutError:
-        logger.error(f"Tool '{name}' timed out after 60 seconds")
-        return [TextContent(type="text", text=json.dumps({
-            "error": f"Tool '{name}' timed out after 60 seconds",
-            "tool": name
-        }, ensure_ascii=False, separators=(",", ":")))]
+        except asyncio.TimeoutError:
+            logger.error(f"Tool '{name}' timed out after 60 seconds")
+            return [TextContent(type="text", text=json.dumps({
+                "error": f"Tool '{name}' timed out after 60 seconds",
+                "tool": name
+            }, ensure_ascii=False, separators=(",", ":")))]
 
-    except Exception as e:
-        logger.exception(f"Error executing tool '{name}'")
-        return [TextContent(type="text", text=json.dumps({
-            "error": str(e),
-            "tool": name
-        }, ensure_ascii=False, separators=(",", ":")))]
+        except Exception as e:
+            if attempt == 1 and _is_disconnect_error(e):
+                logger.warning(
+                    f"Outlook COM connection lost during '{name}' ({e}); "
+                    "reconnecting and retrying once"
+                )
+                _reset_client()
+                continue
+            logger.exception(f"Error executing tool '{name}'")
+            return [TextContent(type="text", text=json.dumps({
+                "error": str(e),
+                "tool": name
+            }, ensure_ascii=False, separators=(",", ":")))]
 
 
 
