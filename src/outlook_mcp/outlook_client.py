@@ -333,6 +333,25 @@ class OutlookClient:
             added.append({"cid": cid, "file": os.path.basename(full_path)})
         return added
 
+    def _get_default_signature(self, html_body: bool, item: Any = None) -> str:
+        """Capture the account's default signature via the GetInspector trick.
+
+        Outlook only inserts the configured default signature when a compose
+        inspector opens. For a brand-new item, touching its own inspector
+        inserts it; for an existing draft (update), a scratch item is created
+        to read the signature — assigning HTMLBody on the draft would
+        otherwise wipe the signature the item already carries.
+        """
+        try:
+            if item is not None:
+                _ = item.GetInspector
+                return item.HTMLBody if html_body else item.Body
+            scratch = self.app.CreateItem(0)  # transient, never saved
+            _ = scratch.GetInspector
+            return scratch.HTMLBody if html_body else scratch.Body
+        except Exception:
+            return ""
+
     def create_draft(
         self,
         subject: str = "",
@@ -383,13 +402,7 @@ class OutlookClient:
         # Outlook only inserts the configured default signature when a compose
         # inspector opens — touching GetInspector forces it onto the item.
         # Capture it so the body can be placed above it below.
-        signature = ""
-        if include_signature:
-            try:
-                _ = mail.GetInspector
-                signature = mail.HTMLBody if html_body else mail.Body
-            except Exception:
-                signature = ""
+        signature = self._get_default_signature(html_body, item=mail) if include_signature else ""
 
         if html_body:
             mail.HTMLBody = body + signature if signature else body
@@ -1316,13 +1329,16 @@ class OutlookClient:
         attachments: list[str] | None = None,
         importance: int | None = None,
         inline_images: list[dict[str, str]] | None = None,
+        include_signature: bool = True,
     ) -> dict[str, Any]:
         """Update an existing draft email.
 
         Args:
             entry_id: The Outlook EntryID of the draft.
             subject: New subject.
-            body: New body text.
+            body: New body text. Assigning the body replaces the whole
+                message, so by default the account's default signature is
+                re-applied below the new body (see include_signature).
             to: New recipients.
             cc: New CC recipients.
             bcc: New BCC recipients.
@@ -1332,6 +1348,8 @@ class OutlookClient:
             inline_images: List of {"path": file, "cid": content-id} dicts to
                 embed inline; reference each in the HTML body as
                 <img src="cid:<cid>"> (works inside table cells).
+            include_signature: Re-apply the account's default Outlook
+                signature below a new body (default: True).
 
         Returns:
             Dict with update result.
@@ -1365,12 +1383,15 @@ class OutlookClient:
         if inline_images:
             for added in self._add_inline_images(draft, inline_images):
                 changed.append(f"inline_image: {added['file']} (cid: {added['cid']})")
-        # Set the body last so cid: references resolve against the attachments above
+        # Set the body last so cid: references resolve against the attachments
+        # above. Assigning the body replaces the whole message — re-apply the
+        # default signature below the new body so it is not lost on update.
         if body is not None:
+            signature = self._get_default_signature(html_body) if include_signature else ""
             if html_body:
-                draft.HTMLBody = body
+                draft.HTMLBody = body + signature if signature else body
             else:
-                draft.Body = body
+                draft.Body = f"{body}\r\n{signature}" if signature else body
             changed.append("body")
 
         draft.Save()

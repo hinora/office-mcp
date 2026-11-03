@@ -342,6 +342,26 @@ def _test_create_draft_signature():
 run_test("create_draft_signature", _test_create_draft_signature)
 
 
+def _test_update_draft_signature():
+    # Repro of the agent workflow: create with signature, then update the
+    # HTML body WITHOUT resending the signature — it must be re-applied.
+    r = C.create_draft(subject="MCP Test Update Sig - Please Ignore",
+                       body="<p>update sig marker A</p>", html_body=True,
+                       to="nobody@example.com")
+    _cleanup_ids["drafts"].append(r["entry_id"])
+    C.update_draft(entry_id=r["entry_id"], body="<p>update sig marker B</p>", html_body=True)
+    draft = C.namespace.GetItemFromID(r["entry_id"])
+    ok("update sig marker B" in draft.HTMLBody, "Updated body should be present")
+    ok("update sig marker A" not in draft.HTMLBody, "Old body should be gone")
+    has_sig = "OfficeDocumentSettings" in draft.HTMLBody or "ProgId content=Word.Document" in draft.HTMLBody
+    if has_sig:
+        ok(draft.HTMLBody.find("update sig marker B") < draft.HTMLBody.find("OfficeDocumentSettings"),
+           "Signature should sit below the body")
+    else:
+        print("    (no default signature configured on this account)")
+run_test("update_draft_preserves_signature", _test_update_draft_signature)
+
+
 # ── CALENDAR ─────────────────────────────────────────────────────
 print("── Calendar ──")
 run_test("list_calendar", lambda: (

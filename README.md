@@ -885,7 +885,7 @@ Get Outlook version, accounts, and folder counts. No parameters required.
 | `search` | Search emails (`subject`, `sender`, `received_after`, `received_before`, `unread_only`, etc.) |
 | `get` | Get full email details by `entry_id` (includes body) |
 | `create_draft` | Create a draft email (`to`, `subject`, `body`, `cc`, `bcc`, `attachments`, `html_body`, `importance`, `inline_images`) |
-| `update_draft` | Update an existing draft (`entry_id`, and any of `subject`, `body`, `to`, `cc`, `bcc`, `html_body`, `attachments`, `importance`, `inline_images`) |
+| `update_draft` | Update an existing draft (`entry_id`, and any of `subject`, `body`, `to`, `cc`, `bcc`, `html_body`, `attachments`, `importance`, `inline_images`, `include_signature`) |
 | `delete` | Delete an email by `entry_id` |
 | `move` | Move an email to `dest_folder` (inbox/sent/drafts/deleted) |
 | `mark_read` | Mark as read or unread (`read`: bool) |
@@ -896,6 +896,10 @@ Get Outlook version, accounts, and folder counts. No parameters required.
 | `open` | Open an email in its own window by `entry_id` |
 
 > **Note:** To send an email, use `create_draft` to create it, then `update_draft` to modify it, and the draft can be sent manually from Outlook. The MCP uses a draft-based workflow instead of direct sending for security.
+
+#### Default signature
+
+New drafts include the account's default Outlook signature below the body, matching what you get composing in Outlook itself. Assigning a body replaces the whole message, so `update_draft` **re-applies the signature below the new body** automatically — the agent never needs to resend the signature text. Pass `"include_signature": false` to skip it.
 
 #### Inline images in HTML drafts
 

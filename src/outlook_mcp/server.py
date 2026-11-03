@@ -106,7 +106,7 @@ TOOLS: list[Tool] = [
                 "html_body": {"type": "boolean", "description": "Treat body as HTML"},
                 "attachments": {"type": "string", "description": "JSON array of file paths"},
                 "inline_images": {"type": "string", "description": "JSON array of {\"path\": file, \"cid\": id} objects to embed inline in an HTML draft; reference each in the body as <img src=\"cid:<cid>\"> (works inside table cells)"},
-                "include_signature": {"type": "boolean", "description": "Include the account's default Outlook signature below the body (create_draft, default: true)"},
+                "include_signature": {"type": "boolean", "description": "Include the account's default Outlook signature below the body (create_draft and update_draft body changes, default: true)"},
                 "importance": {"type": "string", "description": "low/normal/high"},
                 "dest_folder": {"type": "string", "description": "Destination folder: inbox/sent/drafts/deleted (move)"},
                 "read": {"type": "boolean", "description": "Mark read (true) or unread (false)"},
@@ -411,6 +411,7 @@ def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str
                 html_body=args.get("html_body", False), attachments=_parse_attachments(args),
                 importance=IMPORTANCE_MAP.get(args.get("importance"), None),
                 inline_images=_parse_inline_images(args),
+                include_signature=args.get("include_signature", True),
             )
     # ── 3. Calendar ──
     elif name == "outlook_calendar":
