@@ -40,6 +40,11 @@ class OutlookClient:
     IMPORTANCE_NORMAL = 1
     IMPORTANCE_HIGH = 2
 
+    # MAPI property tags for inline (cid-embedded) attachments
+    PR_ATTACH_CONTENT_ID = "http://schemas.microsoft.com/mapi/proptag/0x3712001F"
+    PR_ATTACH_FLAGS = "http://schemas.microsoft.com/mapi/proptag/0x37140003"
+    ATTACH_MIME_EMBEDDED_IN_HTML = 4  # marks the attachment as embedded (not honored by all builds)
+
     def __init__(self) -> None:
         """Initialize the Outlook client and connect to Outlook."""
         self._app: Any = None
@@ -259,6 +264,53 @@ class OutlookClient:
 
         return result
 
+    def _add_inline_images(
+        self, item: Any, inline_images: list[dict[str, str]] | None
+    ) -> list[dict[str, str]]:
+        """
+        Attach images with a Content-ID so they can be referenced inline
+        in the HTML body as <img src="cid:<cid>"> (e.g. inside a table cell).
+
+        Args:
+            item: The MailItem to attach the images to.
+            inline_images: List of {"path": file, "cid": content-id} dicts.
+
+        Returns:
+            List of {"cid": ..., "file": ...} dicts for the images added.
+
+        Raises:
+            ValueError: If an entry is malformed or missing a cid.
+            FileNotFoundError: If an image file does not exist.
+        """
+        added: list[dict[str, str]] = []
+        if not inline_images:
+            return added
+        for i, spec in enumerate(inline_images):
+            if not isinstance(spec, dict) or not spec.get("path"):
+                raise ValueError(
+                    f"inline_images[{i}] must be an object with 'path' and 'cid' keys."
+                )
+            cid = (spec.get("cid") or "").strip()
+            if not cid:
+                raise ValueError(
+                    f"inline_images[{i}] is missing 'cid' "
+                    "(referenced in the HTML body as <img src=\"cid:<cid>\">)."
+                )
+            full_path = os.path.abspath(spec["path"])
+            if not os.path.exists(full_path):
+                raise FileNotFoundError(f"Inline image not found: {full_path}")
+            att = item.Attachments.Add(full_path)
+            att.PropertyAccessor.SetProperty(self.PR_ATTACH_CONTENT_ID, cid)
+            # Mark as MIME-embedded so the image stays out of the paperclip row.
+            # Best-effort: some Outlook builds reject this property; the cid
+            # reference above is what actually renders the image inline.
+            try:
+                att.PropertyAccessor.SetProperty(self.PR_ATTACH_FLAGS, self.ATTACH_MIME_EMBEDDED_IN_HTML)
+            except pythoncom.com_error:
+                pass
+            added.append({"cid": cid, "file": os.path.basename(full_path)})
+        return added
+
     def create_draft(
         self,
         subject: str = "",
@@ -269,6 +321,8 @@ class OutlookClient:
         attachments: list[str] | None = None,
         html_body: bool = False,
         importance: int = IMPORTANCE_NORMAL,
+        inline_images: list[dict[str, str]] | None = None,
+        include_signature: bool = True,
     ) -> dict[str, Any]:
         """
         Create a draft email (does NOT send).
@@ -282,6 +336,11 @@ class OutlookClient:
             attachments: List of file paths to attach.
             html_body: If True, treat body as HTML.
             importance: Importance level (0=Low, 1=Normal, 2=High).
+            inline_images: List of {"path": file, "cid": content-id} dicts to
+                embed inline; reference each in the HTML body as
+                <img src="cid:<cid>"> (works inside table cells).
+            include_signature: Prepend the account's default Outlook signature
+                below the body (default: True).
 
         Returns:
             Dict with draft info including EntryID.
@@ -290,31 +349,48 @@ class OutlookClient:
         if to:
             mail.To = to
         mail.Subject = subject
+
+        # Attach files before setting the body so cid: references resolve in HTMLBody
+        if attachments:
+            for filepath in attachments:
+                full_path = os.path.abspath(filepath)
+                if os.path.exists(full_path):
+                    mail.Attachments.Add(full_path)
+        inline_added = self._add_inline_images(mail, inline_images)
+
+        # Outlook only inserts the configured default signature when a compose
+        # inspector opens — touching GetInspector forces it onto the item.
+        # Capture it so the body can be placed above it below.
+        signature = ""
+        if include_signature:
+            try:
+                _ = mail.GetInspector
+                signature = mail.HTMLBody if html_body else mail.Body
+            except Exception:
+                signature = ""
+
         if html_body:
-            mail.HTMLBody = body
+            mail.HTMLBody = body + signature if signature else body
         else:
-            mail.Body = body
+            mail.Body = f"{body}\r\n{signature}" if signature else body
         if cc:
             mail.CC = cc
         if bcc:
             mail.BCC = bcc
         mail.Importance = importance
 
-        if attachments:
-            for filepath in attachments:
-                full_path = os.path.abspath(filepath)
-                if os.path.exists(full_path):
-                    mail.Attachments.Add(full_path)
-
         # Save to Drafts folder instead of sending
         mail.Save()
 
-        return {
+        result = {
             "message": "Draft saved successfully.",
             "entry_id": mail.EntryID,
             "to": to,
             "subject": subject,
         }
+        if inline_added:
+            result["inline_images"] = inline_added
+        return result
 
     def delete_email(self, entry_id: str) -> dict[str, Any]:
         """
@@ -654,6 +730,7 @@ class OutlookClient:
 
         return {
             "message": "Contact created successfully.",
+            "entry_id": contact.EntryID,
             "full_name": full_name,
             "email": email,
         }
@@ -1004,7 +1081,19 @@ class OutlookClient:
         Returns:
             Dict with export result.
         """
-        contacts = self.list_contacts(account_name=account_name)
+        # Export needs the full field set (last/first name, email2, phones, ...)
+        # which the compact summary dicts from list_contacts do not carry.
+        folder = self._get_folder(self.OL_FOLDER_CONTACTS, account_name)
+        items = folder.Items
+        items.Sort("[FullName]")
+        contacts = []
+        for i in range(1, items.Count + 1):
+            try:
+                item = items.Item(i)
+                if item.Class == 40:  # olContact
+                    contacts.append(self._contact_to_dict(item))
+            except Exception:
+                continue
 
         if not save_path:
             save_path = os.getcwd()
@@ -1204,6 +1293,7 @@ class OutlookClient:
         html_body: bool = False,
         attachments: list[str] | None = None,
         importance: int | None = None,
+        inline_images: list[dict[str, str]] | None = None,
     ) -> dict[str, Any]:
         """Update an existing draft email.
 
@@ -1217,6 +1307,9 @@ class OutlookClient:
             html_body: If True, treat body as HTML.
             attachments: Additional file paths to attach.
             importance: Importance level (0=Low, 1=Normal, 2=High).
+            inline_images: List of {"path": file, "cid": content-id} dicts to
+                embed inline; reference each in the HTML body as
+                <img src="cid:<cid>"> (works inside table cells).
 
         Returns:
             Dict with update result.
@@ -1229,12 +1322,6 @@ class OutlookClient:
         if subject is not None:
             draft.Subject = subject
             changed.append("subject")
-        if body is not None:
-            if html_body:
-                draft.HTMLBody = body
-            else:
-                draft.Body = body
-            changed.append("body")
         if to is not None:
             draft.To = to
             changed.append("to")
@@ -1253,6 +1340,16 @@ class OutlookClient:
                 if os.path.exists(full_path):
                     draft.Attachments.Add(full_path)
                     changed.append(f"attachment: {os.path.basename(filepath)}")
+        if inline_images:
+            for added in self._add_inline_images(draft, inline_images):
+                changed.append(f"inline_image: {added['file']} (cid: {added['cid']})")
+        # Set the body last so cid: references resolve against the attachments above
+        if body is not None:
+            if html_body:
+                draft.HTMLBody = body
+            else:
+                draft.Body = body
+            changed.append("body")
 
         draft.Save()
 

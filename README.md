@@ -884,8 +884,8 @@ Get Outlook version, accounts, and folder counts. No parameters required.
 | `list` | List emails from a folder (`folder`: inbox/sent/drafts/deleted; `count`, `offset`, `fields`, `account_name`) |
 | `search` | Search emails (`subject`, `sender`, `received_after`, `received_before`, `unread_only`, etc.) |
 | `get` | Get full email details by `entry_id` (includes body) |
-| `create_draft` | Create a draft email (`to`, `subject`, `body`, `cc`, `bcc`, `attachments`, `html_body`, `importance`) |
-| `update_draft` | Update an existing draft (`entry_id`, and any of `subject`, `body`, `to`, `cc`, `bcc`, `html_body`, `attachments`, `importance`) |
+| `create_draft` | Create a draft email (`to`, `subject`, `body`, `cc`, `bcc`, `attachments`, `html_body`, `importance`, `inline_images`) |
+| `update_draft` | Update an existing draft (`entry_id`, and any of `subject`, `body`, `to`, `cc`, `bcc`, `html_body`, `attachments`, `importance`, `inline_images`) |
 | `delete` | Delete an email by `entry_id` |
 | `move` | Move an email to `dest_folder` (inbox/sent/drafts/deleted) |
 | `mark_read` | Mark as read or unread (`read`: bool) |
@@ -896,6 +896,23 @@ Get Outlook version, accounts, and folder counts. No parameters required.
 | `open` | Open an email in its own window by `entry_id` |
 
 > **Note:** To send an email, use `create_draft` to create it, then `update_draft` to modify it, and the draft can be sent manually from Outlook. The MCP uses a draft-based workflow instead of direct sending for security.
+
+#### Inline images in HTML drafts
+
+To embed an image **inside** the email body (e.g. within a table cell), pass `inline_images` — a JSON array of `{"path": file, "cid": id}` objects — to `create_draft` or `update_draft`, and reference each image in the HTML body as `src="cid:<id>"`:
+
+```json
+{
+  "action": "create_draft",
+  "to": "jane@example.com",
+  "subject": "Weekly report",
+  "html_body": true,
+  "body": "<table><tr><td><img src=\"cid:logo\" width=\"120\"></td><td>Report body…</td></tr></table>",
+  "inline_images": "[{\"path\": \"C:/pics/logo.png\", \"cid\": \"logo\"}]"
+}
+```
+
+Plain `<img src="file:///...">` links are blocked by Outlook — `inline_images` packages the file into the message so it renders everywhere. Each `cid` must be unique within the draft.
 
 ### `outlook_calendar` — Calendar Management
 

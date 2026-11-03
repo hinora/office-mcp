@@ -4,6 +4,7 @@ Tests all new tools without sending any emails.
 """
 from __future__ import annotations
 
+import base64
 import os
 import sys
 import tempfile
@@ -247,6 +248,98 @@ if _cleanup_ids["drafts"]:
         draft := C.get_email_by_id(draft_id),
         eq(draft["subject"], "MCP Test Draft - UPDATED"),
     ))
+
+
+# ── DRAFTS: Inline images (cid embedding) ────────────────────────
+# 1x1 transparent PNG written to the temp dir for embedding tests
+_test_png = os.path.join(_test_dir, "mcp_test_image.png")
+with open(_test_png, "wb") as _f:
+    _f.write(base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+    ))
+
+print("── Drafts: Inline Images ──")
+run_test("create_draft_inline_image", lambda: (
+    r := C.create_draft(
+        subject="MCP Test Inline Image Draft - Please Ignore",
+        body="<html><body><table><tr><td>Logo:</td>"
+             "<td><img src=\"cid:test_inline_img\" width=\"120\"></td></tr></table></body></html>",
+        to="nobody@example.com",
+        html_body=True,
+        inline_images=[{"path": _test_png, "cid": "test_inline_img"}],
+    ),
+    has("entry_id", r),
+    eq(r.get("inline_images"), [{"cid": "test_inline_img", "file": "mcp_test_image.png"}]),
+    _cleanup_ids["drafts"].append(r["entry_id"]),
+))
+
+if _cleanup_ids["drafts"]:
+    inline_draft_id = _cleanup_ids["drafts"][-1]
+
+    run_test("verify_inline_image_content_id", lambda: (
+        draft := C.namespace.GetItemFromID(inline_draft_id),
+        eq(draft.Attachments.Count, 1),
+        eq(draft.Attachments.Item(1).PropertyAccessor.GetProperty(C.PR_ATTACH_CONTENT_ID),
+           "test_inline_img"),
+    ))
+
+    run_test("update_draft_add_inline_image", lambda: (
+        r := C.update_draft(
+            entry_id=inline_draft_id,
+            inline_images=[{"path": _test_png, "cid": "test_inline_img2"}],
+        ),
+        has("message", r),
+        ok(any(c.startswith("inline_image:") for c in r["changed_fields"]),
+           "changed_fields should mention the inline image"),
+    ))
+
+    run_test("verify_two_inline_images", lambda: (
+        draft := C.namespace.GetItemFromID(inline_draft_id),
+        eq(draft.Attachments.Count, 2),
+        eq(draft.Attachments.Item(2).PropertyAccessor.GetProperty(C.PR_ATTACH_CONTENT_ID),
+           "test_inline_img2"),
+    ))
+
+
+def _test_inline_missing_cid():
+    try:
+        C.create_draft(subject="MCP Test - no cid", inline_images=[{"path": _test_png}])
+        raise AssertionError("Expected ValueError for inline image without cid")
+    except ValueError:
+        pass  # expected — no cid means the agent could never reference the image
+run_test("create_draft_inline_missing_cid_raises", _test_inline_missing_cid)
+
+
+def _test_inline_missing_file():
+    try:
+        C.create_draft(
+            subject="MCP Test - missing image",
+            inline_images=[{"path": os.path.join(_test_dir, "does_not_exist.png"), "cid": "x"}],
+        )
+        raise AssertionError("Expected FileNotFoundError for missing inline image file")
+    except FileNotFoundError:
+        pass  # expected — a missing file would silently produce a broken cid reference
+run_test("create_draft_inline_missing_file_raises", _test_inline_missing_file)
+
+
+def _test_create_draft_signature():
+    body = "<p>signature body marker</p>"
+    r_on = C.create_draft(subject="MCP Test Sig ON - Please Ignore", body=body,
+                          html_body=True, to="nobody@example.com")
+    r_off = C.create_draft(subject="MCP Test Sig OFF - Please Ignore", body=body,
+                           html_body=True, to="nobody@example.com", include_signature=False)
+    _cleanup_ids["drafts"].append(r_on["entry_id"])
+    _cleanup_ids["drafts"].append(r_off["entry_id"])
+    on = C.namespace.GetItemFromID(r_on["entry_id"])
+    off = C.namespace.GetItemFromID(r_off["entry_id"])
+    ok("signature body marker" in on.HTMLBody, "Body should be present with signature ON")
+    ok("signature body marker" in off.HTMLBody, "Body should be present with signature OFF")
+    ok(len(on.HTMLBody) >= len(off.HTMLBody), "Sig-ON draft should carry >= content than Sig-OFF")
+    if len(on.HTMLBody) > len(off.HTMLBody):
+        print("    (account default signature detected and included)")
+    else:
+        print("    (no default signature configured on this account)")
+run_test("create_draft_signature", _test_create_draft_signature)
 
 
 # ── CALENDAR ─────────────────────────────────────────────────────

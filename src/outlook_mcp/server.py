@@ -105,6 +105,8 @@ TOOLS: list[Tool] = [
                 "body": {"type": "string", "description": "Email body text"},
                 "html_body": {"type": "boolean", "description": "Treat body as HTML"},
                 "attachments": {"type": "string", "description": "JSON array of file paths"},
+                "inline_images": {"type": "string", "description": "JSON array of {\"path\": file, \"cid\": id} objects to embed inline in an HTML draft; reference each in the body as <img src=\"cid:<cid>\"> (works inside table cells)"},
+                "include_signature": {"type": "boolean", "description": "Include the account's default Outlook signature below the body (create_draft, default: true)"},
                 "importance": {"type": "string", "description": "low/normal/high"},
                 "dest_folder": {"type": "string", "description": "Destination folder: inbox/sent/drafts/deleted (move)"},
                 "read": {"type": "boolean", "description": "Mark read (true) or unread (false)"},
@@ -307,6 +309,16 @@ def _parse_attachments(args: dict[str, Any]) -> list[str] | None:
     return None
 
 
+def _parse_inline_images(args: dict[str, Any]) -> list[dict[str, str]] | None:
+    """Parse inline_images JSON from arguments."""
+    if "inline_images" in args and args["inline_images"]:
+        parsed = json.loads(args["inline_images"])
+        if not isinstance(parsed, list):
+            raise ValueError("inline_images must be a JSON array of {\"path\", \"cid\"} objects.")
+        return parsed
+    return None
+
+
 def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str:
     pythoncom.CoInitialize()
     result: Any = None
@@ -343,6 +355,8 @@ def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str
                 cc=args.get("cc", ""), bcc=args.get("bcc", ""),
                 attachments=_parse_attachments(args), html_body=args.get("html_body", False),
                 importance=IMPORTANCE_MAP.get(args.get("importance", "normal"), 1),
+                inline_images=_parse_inline_images(args),
+                include_signature=args.get("include_signature", True),
             )
         elif action == "delete":
             result = client.delete_email(args["entry_id"])
@@ -367,6 +381,7 @@ def _execute_tool(name: str, args: dict[str, Any], client: OutlookClient) -> str
                 to=args.get("to"), cc=args.get("cc"), bcc=args.get("bcc"),
                 html_body=args.get("html_body", False), attachments=_parse_attachments(args),
                 importance=IMPORTANCE_MAP.get(args.get("importance"), None),
+                inline_images=_parse_inline_images(args),
             )
     # ── 3. Calendar ──
     elif name == "outlook_calendar":
