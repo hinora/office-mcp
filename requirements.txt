@@ -1,3 +1,6 @@
-mcp>=1.0.0
+# Pin to 1.x: SDK v2 removed the @server.list_tools()/call_tool() decorators
+# used by all six servers. Unpinned builds (e.g. the GitHub release workflow)
+# would install 2.x and ship exes that crash on startup.
+mcp>=1.0.0,<2.0
 pywin32>=306
 websockets>=12.0

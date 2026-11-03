@@ -223,6 +223,8 @@ def main() -> None:
             target = "slide"
         elif arg in ("--outlook",):
             target = "outlook"
+        elif arg in ("--whatsapp",):
+            target = "whatsapp"
         elif arg in ("--meta",):
             target = "meta"
         elif arg in ("--all",):
