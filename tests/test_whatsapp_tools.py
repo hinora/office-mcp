@@ -76,7 +76,9 @@ def test_cdp_imports():
     assert_true(CDPClient is not None)
     assert_true(callable(fetch_page_targets))
     assert_true(callable(find_whatsapp_target))
-    assert_eq(CHROME_DEBUG_URL, "http://localhost:9222")
+    # Must be explicit IPv4: Chrome binds the debug port to 127.0.0.1 only,
+    # and "localhost" resolves to ::1 first on Windows (stalls ~2s per request)
+    assert_eq(CHROME_DEBUG_URL, "http://127.0.0.1:9222")
     assert_eq(WHATSAPP_URL_PATTERN, "web.whatsapp.com")
 
 

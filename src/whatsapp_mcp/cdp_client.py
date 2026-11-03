@@ -29,7 +29,9 @@ logger = logging.getLogger(__name__)
 
 # ── Constants ──────────────────────────────────────────────────────────
 
-CHROME_DEBUG_URL = "http://localhost:9222"
+CHROME_DEBUG_URL = "http://127.0.0.1:9222"  # explicit IPv4: Chrome binds 127.0.0.1 only,
+# while "localhost" resolves to ::1 first on Windows and the refused IPv6 attempt
+# can stall ~2s before the fallback to 127.0.0.1
 WHATSAPP_URL_PATTERN = "web.whatsapp.com"
 WS_CONNECT_TIMEOUT = 10.0
 
@@ -239,7 +241,9 @@ class WhatsAppClient:
             if not targets:
                 return (
                     f"Chrome debug port ({CHROME_DEBUG_URL}) is not reachable. "
-                    "Make sure Chrome is running with --remote-debugging-port=9222"
+                    "Make sure Chrome is running with --remote-debugging-port=9222. "
+                    "Note: a Chrome auto-update relaunch drops the debug flags — "
+                    "relaunch Chrome with the setup command."
                 )
             wa = find_whatsapp_target(targets)
             if not wa:
@@ -250,6 +254,9 @@ class WhatsAppClient:
             ws_url = wa.get("webSocketDebuggerUrl")
             if not ws_url:
                 return "WhatsApp tab found but missing webSocketDebuggerUrl"
+            # /json reports ws://localhost:... — pin to 127.0.0.1 for the same
+            # IPv6-stall reason as CHROME_DEBUG_URL above.
+            ws_url = ws_url.replace("//localhost:", "//127.0.0.1:", 1)
 
             self._cdp = CDPClient(
                 ws_url=ws_url,

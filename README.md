@@ -1142,6 +1142,9 @@ The assistant calls `whatsapp_get_chat_media` with `chat_name="Project Team"`, t
 ### "Could not connect to Chrome"
 
 - Ensure Chrome is running with `--remote-debugging-port=9222`
+- **Chrome auto-updates relaunch the browser without custom flags** — after an update the debug port is gone until you relaunch with the setup command
+- Since Chrome 136, `--remote-debugging-port` is ignored on the **default** user profile — always launch with a separate `--user-data-dir` (as in the setup command)
+- The MCP connects via `127.0.0.1` explicitly; avoid proxy/VPN tools that filter loopback traffic, or exempt `127.0.0.1:9222`
 - Check that no other program is using port 9222
 - Close all Chrome windows and restart with the debugging flag
 
